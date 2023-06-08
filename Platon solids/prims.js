@@ -38,9 +38,9 @@ export function loadObj(input) {
 }
 
 function primLoadObj(file) {
-    let vertices = [];
+    let vertices = [0];
     let indices = [];
-    let normals = [];
+    let normals = [0];
     let strings = file.split("\n");
 
     for (let i = 0; i < strings.length; i++) {
@@ -56,9 +56,10 @@ function primLoadObj(file) {
             indices.push(+string[2].split("/")[0]);
             indices.push(+string[3].split("/")[0]);
         } else if (string[0] == "vn") {
-            normals.push(+string[1]);
-            normals.push(+string[2]);
-            normals.push(+string[3]);
+            let x = +string[1],
+                y = +string[2],
+                z = +string[3];
+            normals.push(new vec3(x, y, z));
         }
     }
     if (normals.length == 0) normals = calculateNormals(vertices, indices);
@@ -66,8 +67,10 @@ function primLoadObj(file) {
     let realV = [];
     vertices.forEach((it, index) => realV.push(new vertex(it, normals[index])));
     let res = new prim(realV, indices);
-    res.create().then(() => primitives.push(res));
     res.mtl = new mtl();
+    res.mtl.shaderName = "withLight";
+    res.create().then(() => primitives.push(res));
+
     return res;
 }
 
@@ -162,7 +165,7 @@ export class prim {
             // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.iBuf);
             gl.drawElements(
                 gl.TRIANGLES,
-                this.vBuf.length / 3, // num vertices to process
+                this.iBuf.length, // num vertices to process
                 gl.UNSIGNED_SHORT, // type of indices
                 0 // offset on bytes to indices
             );
