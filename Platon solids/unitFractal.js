@@ -1,22 +1,22 @@
 import { gl } from "./main.js";
 import { unitAdd } from "./units.js";
 import { shaderAdd } from "./shaders.js";
-import { mouse, isPause } from "./controls.js";
-
-const canvas = document.getElementById("glCanvas");
+import { mouse } from "./controls.js";
 
 let pos = [];
-let posLoc;
 let shaderProgram;
+let fracVertexArray;
 const rcoeff = document.getElementById("rcoeff");
 const gcoeff = document.getElementById("gcoeff");
 const bcoeff = document.getElementById("bcoeff");
 const a = document.getElementById("a");
 const b = document.getElementById("b");
+let startTime = Date.now();
 function render() {
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pos), gl.STATIC_DRAW);
-    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(0); //posloc
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.disable(gl.DEPTH_TEST);
+    gl.bindVertexArray(fracVertexArray);
+    gl.useProgram(shaderProgram.shaderProgram);
     let timeLoc = gl.getUniformLocation(shaderProgram.shaderProgram, "time");
     let xLoc = gl.getUniformLocation(shaderProgram.shaderProgram, "x");
     let yLoc = gl.getUniformLocation(shaderProgram.shaderProgram, "y");
@@ -35,22 +35,32 @@ function render() {
     );
     let aLoc = gl.getUniformLocation(shaderProgram.shaderProgram, "a");
     let bLoc = gl.getUniformLocation(shaderProgram.shaderProgram, "b");
-    gl.uniform1f(timeLoc, isPause ? 100 : Date.now());
-    gl.uniform1f(yLoc, mouse.x / canvas.width);
-    gl.uniform1f(xLoc, mouse.y / canvas.height);
+    gl.uniform1f(timeLoc, (Date.now() - startTime) / 1000);
+    gl.uniform1f(yLoc, 1);
+    gl.uniform1f(xLoc, 0);
     gl.uniform1f(zoom, mouse.zoom);
     gl.uniform1f(rcoeffLoc, rcoeff.value);
     gl.uniform1f(gcoeffLoc, gcoeff.value);
     gl.uniform1f(bcoeffLoc, bcoeff.value);
     gl.uniform1f(aLoc, a.value);
-    gl.uniform1f(bLoc, b.value);
+    gl.uniform1f(bLoc, b.value * 5);
     gl.useProgram(shaderProgram.shaderProgram);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.enable(gl.DEPTH_TEST);
 }
 async function init() {
-    /* Tetr */
+    fracVertexArray = gl.createVertexArray();
+    gl.bindVertexArray(fracVertexArray);
     shaderProgram = await shaderAdd("mandelbrot");
-    pos = [-1, -1, -1, 1, 1, -1, 1, 1];
+    pos = [-1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0];
+
+    let posLoc = gl.getAttribLocation(shaderProgram.shaderProgram, "in_pos");
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pos), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
+
     gl.bindVertexArray(null);
     /* aaa */
 }

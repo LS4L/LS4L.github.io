@@ -13,6 +13,7 @@
             //src="main.js"
             import * as GLtest from "./main.js";
             import * as controls from "./controls.js";
+            import { loadObj } from "./prims.js";
             window.addEventListener("load", () => {
                 GLtest.initGL();
                 window.onmousemove = controls.handleMouseMove;
@@ -33,10 +34,15 @@
                 window.addEventListener("keydown", (event) => {
                     controls.handleKeyDown(event);
                 });
+                document
+                    .querySelector("#file")
+                    .addEventListener("change", loadObj);
             });
         </script>
+        <script src="./prims.js"></script>
         <div>
             <div style="position: fixed">
+                <input type="file" id="file" />
                 <form>
                     <div id="coords"></div>
                     <input
@@ -130,6 +136,7 @@
                     /><label for="b">b</label>
                 </form>
             </div>
+
             <canvas id="glCanvas" width="3000" height="3000"> </canvas>
         </div>
     </body>

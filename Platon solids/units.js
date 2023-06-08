@@ -5,6 +5,8 @@ import { unitIcoAdd } from "./unitIcosahedron.js";
 import { unitMrkAdd } from "./markers.js";
 import { unitMarkersAdd } from "./unitmarker.js";
 import { unitFracAdd } from "./unitFractal.js";
+import { unitObjAdd } from "./unitObj.js";
+import { unitPlaneAdd } from "./unitPlane.js";
 
 export class unit {
     constructor(init, render) {
@@ -22,6 +24,8 @@ export async function init() {
     unitIcoAdd();
     unitMrkAdd();
     unitMarkersAdd();
+    unitObjAdd();
+    unitPlaneAdd();
     for (let i = 0; i < units.length; i++) {
         await units[i].init();
     }

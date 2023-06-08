@@ -9,9 +9,9 @@ export class shader {
         this.shaderProgram = shaderProgram;
     }
 }
-export async function shaderAdd(fileName) {
+export async function shaderAdd(fileName = null) {
     let vs, fs, res;
-    if (fileName == undefined) return shaders[0];
+    if (fileName == null) return shaders[0];
     function loadShader(gl, type, source) {
         const shader = gl.createShader(type);
         gl.shaderSource(shader, source);
@@ -52,23 +52,29 @@ export async function shaderAdd(fileName) {
     return res;
 }
 
-export function useShader(shader, vertices, indices) {
+export function useShader(shader, vertices, indices = null, normals = null) {
     let posLoc = gl.getAttribLocation(shader.shaderProgram, "in_pos");
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        vertices,
+        gl.STATIC_DRAW
+    ); /* TODO: Should i use float32Array here*/
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
 
     const normalLoc = gl.getAttribLocation(shader.shaderProgram, "normal");
     const normalBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-    let vertexNormals = new Float32Array(calculateNormals(vertices, indices));
-    gl.bufferData(gl.ARRAY_BUFFER, vertexNormals, gl.STATIC_DRAW);
+    if (normals == null)
+        normals = new Float32Array(calculateNormals(vertices, indices));
+    gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(normalLoc);
     gl.vertexAttribPointer(normalLoc, 3, gl.FLOAT, false, 0, 0);
-
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+    if (indices != null) {
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+    }
 }

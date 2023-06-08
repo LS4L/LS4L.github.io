@@ -1,150 +1,196 @@
 import { gl } from "./main.js";
-import { unitAdd } from "./units.js";
 import { cam } from "./controls.js";
-import { matr4, vec3 } from "./mth.js";
+import { matr4, vec2, vec3, vec4 } from "./mth.js";
 import { shaderAdd, useShader } from "./shaders.js";
+import { calculateNormals } from "./utils.js";
 
-export function primLoadObj( fileName )
-{
-  INT i;
-  INT nv, nf;
-  CHAR Buf[10000];
-  FILE *F;
-  INT 
-    size;
-  /* Wrong way to do BB */
-  let
-    MaxBBx = -1000000,
-    MaxBBy = -1000000,
-    MaxBBz = -1000000,
-    MinBBx = 1000000,
-    MinBBy = 1000000,
-    MinBBz = 1000000;
-  let vertices = [];
-  let indices = [];
+export let primitives = [];
 
-  if ((F = fopen(FileName, "r")) == NULL)
-    return FALSE;
-
-  nv = nf = 0;
-  while (fgets(Buf, sizeof(Buf), F) != NULL)
-  {
-    if (Buf[0] == 'v' && Buf[1] == ' ') 
-      nv++;
-    else if (Buf[0] == 'f' && Buf[1] == ' ')
-    {
-      INT n = 0;
-      CHAR *ptr = Buf + 2, old= ' ';
-
-      while (*ptr != 0)
-        n += *ptr != ' ' && old == ' ', old = *ptr++;
-      nf += n - 2;
+class mtl {
+    constructor(
+        ka = new vec3(0.25, 0.25, 0.25),
+        kd = new vec3(0.4, 0.4, 0.4),
+        ks = new vec3(0.774597, 0.774597, 0.774597),
+        ph = 76.8,
+        shaderName = null
+    ) {
+        this.ka = ka;
+        this.kd = kd;
+        this.ks = ks;
+        this.ph = ph;
+        this.shaderName = shaderName;
     }
-  }
-  
-  memset(Pr, 0, sizeof(ls4PRIM));   /* <-- <string.h> */
-  size = sizeof(ls4VERTEX) * nv + sizeof(INT) * nf * 3;
+}
+export function loadObj(input) {
+    let file = input.target.files[0];
 
-  if ((V = malloc(size)) == NULL)
-    return FALSE;
-  I = (INT *)(V + nv);
-  memset(V, 0, size);
+    let reader = new FileReader();
 
-  rewind(F);
-  nv = nf = 0;
-  while (fgets(Buf, sizeof(Buf), F) != NULL)
-  {
-    if (Buf[0] == 'v' && Buf[1] == ' ')
-    {
-      DBL x, y, z;
-      sscanf(Buf + 2, "%lf%lf%lf", &x, &y, &z);
-      V[nv].P = VecSet(x, y, z);
-      V[nv].C = Vec4Set(200, 50, 100, 1);
-      nv++;
-       
-      /* Bound box */
-      if (x < MinBBx)
-        MinBBz = x;
-      if (y < MinBBy)
-        MinBBz = y;
-      if (z < MinBBz)
-        MinBBz = z;
-      
-      if (x > MinBBx)
-        MinBBz = x;
-      if (y > MinBBy)
-        MinBBz = y;
-      if (z > MinBBz)
-        MinBBz = z;
-    }
-    else if (Buf[0] =='f' && Buf[1] == ' ')
-    {
-      INT n = 0;
-      CHAR *ptr = Buf + 2, old = ' ';
-      INT c = 0, c1 = 0, c0 = 0;
+    reader.readAsText(file);
 
-      while (*ptr != 0)
-      {
-        if (*ptr != ' ' && old == ' ')
-        {
-          sscanf(ptr, "%d", &c);
-          if (c < 0)
-            c = nv + c;
-          else
-            c--;
-        
-          if (n == 0)
-            c0 = c;
-          else if (n == 1)
-            c1 = c;
-          else
-          {
-            /*triangle is completed*/
-            I[nf++] = c0;
-            I[nf++] = c1;
-            I[nf++] = c;
-            c1 = c;
-          }
-          n++;
+    reader.onload = (e) => {
+        primLoadObj(e.target.result);
+    };
+
+    reader.onerror = function () {
+        console.log(reader.error);
+    };
+}
+
+function primLoadObj(file) {
+    let vertices = [];
+    let indices = [];
+    let normals = [];
+    let strings = file.split("\n");
+
+    for (let i = 0; i < strings.length; i++) {
+        let string = strings[i].split(" ");
+        if (string[0] == "v") {
+            let x = +string[1],
+                y = +string[2],
+                z = +string[3];
+
+            vertices.push(new vec3(x, y, z));
+        } else if (string[0] == "f") {
+            indices.push(+string[1].split("/")[0]);
+            indices.push(+string[2].split("/")[0]);
+            indices.push(+string[3].split("/")[0]);
+        } else if (string[0] == "vn") {
+            normals.push(+string[1]);
+            normals.push(+string[2]);
+            normals.push(+string[3]);
         }
-       old = *ptr++;
-      }
     }
-  }
+    if (normals.length == 0) normals = calculateNormals(vertices, indices);
 
-  for (i = 0; i < nv; i++)
-    V[i].N = VecSet(0, 0, 0);
+    let realV = [];
+    vertices.forEach((it, index) => realV.push(new vertex(it, normals[index])));
+    let res = new prim(realV, indices);
+    res.create().then(() => primitives.push(res));
+    res.mtl = new mtl();
+    return res;
+}
 
-  for (i = 0; i < nf; i += 3)
-  {
-    if (fabs(I[i]) > 100000 || fabs(I[i + 1]) > 100000 || fabs(I[i + 2]) > 100000)
-      continue;             /* DELETE THIS */
-    {
-      VEC
-        p0 = V[I[i]].P,
-        p1 = V[I[i + 1]].P,
-        p2 = V[I[i + 2]].P,
-        N = VecNormalize(VecCrossVec(VecSubVec(p1, p0), VecSubVec(p2, p0)));
-     
-      V[I[i]].N = VecAddVec(V[I[i]].N, N);
-      V[I[i + 1]].N = VecAddVec(V[I[i + 1]].N, N);
-      V[I[i + 2]].N = VecAddVec(V[I[i + 2]].N, N);
+export class vertex {
+    constructor(
+        p = new vec3(),
+        n = new vec3(),
+        t = new vec2(),
+        c = new vec4()
+    ) {
+        this.p = p;
+        this.n = n;
+        this.t = t;
+        this.c = c;
     }
-  }
+}
 
-  for (i = 0; i < nv; i++)
-  {
-    V[i].N = VecNormalize(V[i].N);
-  }
-  fclose(F);
+export class prim {
+    constructor(
+        vBuf,
+        iBuf = null,
+        mtl = 0,
+        trans = new matr4(),
+        type = gl.TRIANGLES,
+        va = null
+    ) {
+        this.va = va;
+        this.mtl = mtl;
+        this.vBuf = vBuf;
+        this.iBuf = iBuf;
+        this.trans = trans;
+        this.type = type;
+    }
 
+    draw(world) {
+        gl.useProgram(this.shader.shaderProgram);
+        let timeLoc = gl.getUniformLocation(this.shader.shaderProgram, "time");
+        const projectionLoc = gl.getUniformLocation(
+            this.shader.shaderProgram,
+            "projection"
+        );
+        const modelViewLoc = gl.getUniformLocation(
+            this.shader.shaderProgram,
+            "modelView"
+        );
+        const lightDirLoc = gl.getUniformLocation(
+            this.shader.shaderProgram,
+            "lightDir"
+        );
+        const camLocLoc = gl.getUniformLocation(
+            this.shader.shaderProgram,
+            "camLoc"
+        );
+        const worldLoc = gl.getUniformLocation(
+            this.shader.shaderProgram,
+            "world"
+        );
 
-  if (!LS4_RndPrimCreate(Pr, LS4_RND_PRIM_TRIMESH, V, nv, I, nf))
-  {
-    free(V);
-    return FALSE;
-  }
-  Pr->MinBB = VecSet(MinBBx, MinBBy, MinBBz);
-  Pr->MaxBB = VecSet(MaxBBx, MaxBBy, MaxBBz);
-  return true;
+        gl.bindVertexArray(this.va);
+        gl.uniformMatrix4fv(
+            projectionLoc,
+            false,
+            new Float32Array(cam.matrProj.a().join().split(","))
+        );
+        gl.uniformMatrix4fv(
+            modelViewLoc,
+            false,
+            new Float32Array(cam.matrView.a().join().split(","))
+        );
+
+        gl.uniform1f(timeLoc, Date.now());
+        gl.uniform3f(lightDirLoc, 1, 2, 3);
+        gl.uniform3f(camLocLoc, cam.loc.x, cam.loc.y, cam.loc.z);
+
+        /* Customiseable stuff */
+        gl.uniformMatrix4fv(
+            worldLoc,
+            false,
+            new Float32Array(world.a().join().split(","))
+        );
+        const kaLoc = gl.getUniformLocation(this.shader.shaderProgram, "ka");
+        const kdLoc = gl.getUniformLocation(this.shader.shaderProgram, "kd");
+        const ksLoc = gl.getUniformLocation(this.shader.shaderProgram, "ks");
+        const phLoc = gl.getUniformLocation(this.shader.shaderProgram, "ph");
+
+        gl.uniform3f(kaLoc, this.mtl.ka.x, this.mtl.ka.y, this.mtl.ka.z);
+        gl.uniform3f(kdLoc, this.mtl.kd.x, this.mtl.kd.y, this.mtl.kd.z);
+        gl.uniform3f(ksLoc, this.mtl.ks.x, this.mtl.ks.y, this.mtl.ks.z);
+        gl.uniform1f(phLoc, this.mtl.ph);
+
+        if (this.iBuf != null) {
+            // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.iBuf);
+            gl.drawElements(
+                gl.TRIANGLES,
+                this.vBuf.length / 3, // num vertices to process
+                gl.UNSIGNED_SHORT, // type of indices
+                0 // offset on bytes to indices
+            );
+            //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0);
+        } else gl.drawArrays(gl.type, 0, this.vBuf.length);
+    }
+
+    async create() {
+        this.shader = await shaderAdd(this.mtl.shaderName);
+        this.va = gl.createVertexArray();
+        gl.bindVertexArray(this.va);
+        useShader(
+            this.shader,
+            new Float32Array(
+                this.vBuf.map((el) => [el.p.x, el.p.y, el.p.z]).flat()
+            ),
+            new Uint16Array(this.iBuf),
+            new Float32Array(
+                this.vBuf.map((el) => [el.n.x, el.n.y, el.n.z]).flat()
+            )
+        );
+        gl.bindVertexArray(null);
+    }
+}
+
+export class prims {
+    constructor(prims, trans) {
+        this.prims = prims;
+        this.trans = trans;
+    }
 }

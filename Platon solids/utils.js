@@ -1,8 +1,9 @@
 import { vec3 } from "./mth.js";
 
-export function calculateNormals(pos, inds) {
+export function calculateNormals(pos, inds = null) {
     let pts = [];
     let k = 0;
+    if (inds == null) inds = [...Array(pos.length / 3).keys()];
     for (let i = 0; i < pos.length; i += 3) {
         pts[k++] = new vec3(pos[i], pos[i + 1], pos[i + 2]);
     }

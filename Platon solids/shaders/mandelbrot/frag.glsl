@@ -3,8 +3,9 @@
 precision highp float;
 out highp vec4 o_color;
 in highp vec2 color;
-uniform float time;
+
 uniform float x;
+uniform float time;
 uniform float y;
 uniform float zoom;
 uniform float rcoeff;
