@@ -47,7 +47,7 @@ let img;
 async function init() {
     let obj;
 
-    await fetch(`../bin/models/cow1.obj`)
+    await fetch(`bin/models/cow1.obj`)
         .then((res) => res.text())
         .then((data) => {
             obj = data;
