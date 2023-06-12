@@ -20,14 +20,14 @@ export async function shaderAdd(fileName = null) {
         return shader;
     }
 
-    const ft1 = fetch(`Platon solids/bin/shaders/${fileName}/vert.glsl`)
+    const ft1 = fetch(`bin/shaders/${fileName}/vert.glsl`)
         .then((res) => res.text()) // Стрелочная безымянная функция запустится после получение текста, из 'res' получаем текстовые данные
         .then((data) => {
             // Стрелочная безымянная функция запустится для обработки полученных на предыдущем этапе данных - 'data' это полученный текст
             vs = data; // Запоминаем полученный текст в глобальной переменной
         });
 
-    const ft2 = fetch(`Platon solids/bin/shaders/${fileName}/frag.glsl`)
+    const ft2 = fetch(`bin/shaders/${fileName}/frag.glsl`)
         .then((res) => res.text())
         .then((data) => {
             fs = data;
