@@ -8,12 +8,12 @@
         <title>Platon figures</title>
     </head>
     <body>
-        <script src="main.js"></script>
+        <script type="module" src="./main.js"></script>
         <script type="module">
             //src="main.js"
             import * as GLtest from "./main.js";
-            import * as controls from "./controls.js";
-            import { loadObj } from "./prims.js";
+            import * as controls from "./utils/controls.js";
+            import { loadObj } from "./rnd/prims.js";
             window.addEventListener("load", () => {
                 GLtest.initGL();
                 window.onmousemove = controls.handleMouseMove;
@@ -39,10 +39,11 @@
                     .addEventListener("change", loadObj);
             });
         </script>
-        <script src="./prims.js"></script>
+        <script src="./rnd/prims.js"></script>
         <div>
             <div style="position: fixed">
                 <input type="file" id="file" />
+
                 <form>
                     <div id="coords"></div>
                     <input
@@ -135,6 +136,11 @@
                         value="3"
                     /><label for="b">b</label>
                 </form>
+                <img
+                    src="http://cgsg-ops-srv2/!inc/CGSG-Logo.svg"
+                    width="200"
+                    height="200"
+                />
             </div>
 
             <canvas id="glCanvas" width="3000" height="3000"> </canvas>

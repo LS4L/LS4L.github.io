@@ -1,6 +1,6 @@
-import * as units from "./units.js";
-import { shaderAdd } from "./shaders.js";
-import { mouse, cam, ControlCamera } from "./controls.js";
+import * as units from "./units/units.js";
+import { shaderAdd } from "./rnd/shaders.js";
+import { mouse, cam, ControlCamera } from "./utils/controls.js";
 
 const canvas = document.getElementById("glCanvas");
 export const gl = canvas.getContext("webgl2");
@@ -14,7 +14,10 @@ const draw = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     ControlCamera();
+    cam.frameW = canvas.width;
+    cam.frameH = canvas.height;
     cam.camSet(cam.loc, cam.at, cam.up);
+
     coords.innerHTML =
         "LocX: " +
         cam.loc.x.toString().slice(0, 5) +
@@ -57,6 +60,13 @@ export async function initGL() {
     gl.enable(gl.DEPTH_TEST);
     //gl.enable(gl.CULL_FACE);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height); /* Delete this mb*/
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ControlCamera();
+    cam.frameW = canvas.width;
+    cam.frameH = canvas.height;
+    cam.camSet(cam.loc, cam.at, cam.up);
+
     await shaderAdd("default");
     await units.init();
     draw();
