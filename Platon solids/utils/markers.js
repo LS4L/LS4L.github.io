@@ -34,7 +34,6 @@ function render() {
     );
     worldLoc = gl.getUniformLocation(shaderI.shaderProgram, "world");
     colorLoc = gl.getUniformLocation(shaderI.shaderProgram, "color");
-    gl.bindVertexArray(cubeVertexArray);
     gl.uniformMatrix4fv(
         projectionLoc,
         false,
@@ -77,24 +76,22 @@ export class marker {
             false,
             new Float32Array(
                 myMatr4
-                    .scale(
-                        new vec3(
-                            this.width,
-                            this.end.sub(this.start).len(),
-                            this.width
-                        )
-                    )
+                    .scale(new vec3(this.width, centered.len(), this.width))
                     .mul(
                         myMatr4.rotateX(
-                            up.angle(new vec3(0, centered.y, centered.z))
+                            (up.angle(new vec3(0, centered.y, centered.z)) *
+                                180) /
+                                Math.PI
                         )
                     )
                     .mul(
                         myMatr4.rotateY(
-                            up.angle(new vec3(centered.x, 0, centered.z)) + 90
+                            (up.angle(new vec3(centered.x, centered.y, 0)) *
+                                180) /
+                                Math.PI
                         )
                     )
-                    .mul(myMatr4.translate(this.start)) /* Stopped */
+                    .mul(myMatr4.translate(this.start))
                     .a()
                     .join()
                     .split(",")
@@ -131,4 +128,49 @@ async function init() {
 
 export function unitMrkAdd() {
     unitAdd(init, render);
+}
+
+export function markerDraw(
+    start = new vec3(0),
+    end = new vec3(100),
+    width = 0.1,
+    color = new vec4(1, 0, 1, 1)
+) {
+    let myMatr4 = new matr4();
+    let up = new vec3(0, 1, 0);
+    let centered = end.sub(start);
+    gl.bindVertexArray(cubeVertexArray);
+    gl.useProgram(shaderI.shaderProgram);
+    gl.uniformMatrix4fv(
+        worldLoc,
+        false,
+        new Float32Array(
+            myMatr4
+                .scale(new vec3(width, centered.len(), width))
+                .mul(
+                    myMatr4.rotateX(
+                        (up.angle(new vec3(0, centered.y, centered.z)) * 180) /
+                            Math.PI
+                    )
+                )
+                .mul(
+                    myMatr4.rotateY(
+                        (up.angle(new vec3(centered.x, centered.y, 0)) * 180) /
+                            Math.PI
+                    )
+                )
+                .mul(myMatr4.translate(start))
+                .a()
+                .join()
+                .split(",")
+        )
+    );
+    gl.uniform4f(colorLoc, color.x, color.y, color.z, color.w);
+
+    gl.drawElements(
+        gl.TRIANGLES,
+        36, // num vertices to process
+        gl.UNSIGNED_SHORT, // type of indices
+        0 // offset on bytes to indices
+    );
 }

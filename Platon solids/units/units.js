@@ -4,7 +4,6 @@ import { unitOctaAdd } from "./unitOctahedron.js";
 import { unitIcoAdd } from "./unitIcosahedron.js";
 import { unitMrkAdd } from "../utils/markers.js";
 import { unitMarkersAdd } from "./unitmarker.js";
-import { unitFracAdd } from "./unitFractal.js";
 import { unitObjAdd } from "./unitObj.js";
 import { unitPlaneAdd } from "./unitPlane.js";
 import { unitDodeAdd } from "./unitDodecahedron.js";
@@ -20,7 +19,6 @@ let units = [];
 
 export async function init() {
     unitFractalSkyAdd();
-    //unitFracAdd();
     unitCubeAdd();
     unitTetrAdd();
     unitOctaAdd();

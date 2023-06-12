@@ -1,5 +1,5 @@
 import { unitAdd } from "./units.js";
-import { primLoadObj, loadImage } from "../rnd/prims.js";
+import { primLoadObj } from "../rnd/prims.js";
 import { matr4, vec3 } from "../utils/mth.js";
 let primitive;
 let myMatr4 = new matr4();
@@ -43,7 +43,6 @@ function render() {
         }
     }
 }
-let img;
 async function init() {
     let obj;
 

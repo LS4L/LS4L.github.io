@@ -106,6 +106,7 @@ export class vec3 {
     }
 
     angle(vec) {
+        if (vec.len2() == 0 || this.len2() == 0) return 0;
         return Math.acos(this.dot(vec) / (this.len() * vec.len()));
     }
     get xxx() {
