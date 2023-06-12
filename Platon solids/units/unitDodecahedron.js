@@ -20,7 +20,7 @@ function render() {
 async function init() {
     let obj;
 
-    const pr = fetch(`../bin/models/dode.obj`)
+    const pr = fetch(`bin/models/dode.obj`)
         .then((res) => res.text())
         .then((data) => {
             obj = data;
