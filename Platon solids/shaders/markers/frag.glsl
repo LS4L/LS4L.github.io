@@ -8,4 +8,3 @@ void main()
 {
     outColor = color; // vec4(1, 1, 1, 1);
 }
-

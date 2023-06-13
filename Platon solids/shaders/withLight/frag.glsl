@@ -20,10 +20,10 @@ vec3 shade( vec3 p, vec3 n )
   // Ambient
   color = ka;
 
-  //n = faceforward(n, v, n);
+  n = faceforward(n, v, n);
 
   // Diffuse
- color += max(0.0, dot(n, LD)) * kd * lightColor;
+  color += max(0.0, dot(n, LD)) * kd * lightColor;
   
   
   

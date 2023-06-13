@@ -7,7 +7,7 @@ uniform float time;
 uniform vec3 lightDir;
 
 in vec4 color;
-flat in vec3 vNormal;
+in vec3 vNormal;
 in vec3 drawPos;
 out vec4 outColor;
 
