@@ -31,6 +31,7 @@ vec3 shade( vec3 p, vec3 n )
   vec3 r = reflect(v, n);
   color += pow(max(0.0, dot(r, LD)), ph) * ks * lightColor;
 
+  color = vec3(pow(color.x, 2.2), pow(color.y, 2.2), pow(color.z, 2.2));
   return color;
 }
        
