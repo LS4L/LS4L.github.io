@@ -1,118 +1,163 @@
-class Cloth {
+import { vec3, vec4, matr4 } from "../utils/mth.js";
+import { keys, isPause } from "../utils/controls.js";
+import { drawMarker } from "../utils/markers.js";
+
+/*
+
+export function getPointSpherePenetrationPoints(Point, c, r, Q )
+{
+  if (Point.sub(C).len2() > r * r)
+    return null;
+ return c.add(Point.sub(C).mul(R / point.sub(C).len()));
+}
+
+export function getPointCirclePenetrationPoints(Point, c, r, Q )
+{
+  if (((new vec2(Point.X, point.Z)).sub(new vec2(C.X, c.Z)).len2() > r * r) || point.Y > c.Y || point.Y < c.Y - 1)
+    return null;
+
+  return new vec3(Point.X, c.Y, point.Z);
+}
+*/
+let deltaTime = 4;
+export let numIterations = 5;
+
+export class cloth {
   constructor() {
-    this.W = 0;
-    this.H = 0;
-    this.NumOfConstraints = 0;
-    this.Constraints = [];
-    this.P = [];
-    this.OldP = [];
-    this.Forces = [];
-    this.Weight = 0;
-    this.Friction = 0;
-    this.Stiffness = 0;
-    this.HandleCollisions = null;
-    this.HandleHardConstraints = null;
+    this.w = 0;
+    this.h = 0;
+    this.numOfConstraints = 0;
+    this.constraints = [];
+    this.p = [];
+    this.oldP = [];
+    this.forces = [];
+    this.weight = 0;
+    this.friction = 0;
+    this.stiffness = 0;
+    this.handleCollisions = null;
+    this.handleHardConstraints = null;
   }
 
   createDefault(width, height, weight, friction, stiffness) {
-    this.W = width;
-    this.H = height;
-    this.Weight = weight;
-    this.Friction = friction;
-    this.Stiffness = stiffness;
+    this.w = width;
+    this.h = height;
+    this.weight = weight;
+    this.friction = friction;
+    this.stiffness = stiffness;
 
-    // Cloth constraints
+    // cloth constraints
     let p = 0;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         if (x < width - 1) {
-          this.Constraints[p] = {
-            ParticleA: y * width + x,
-            ParticleB: y * width + (x + 1),
-            RestLength: 1,
-            Damper: 0,
-            Stretch: vec3.create(),
+          this.constraints[p] = {
+            particleA: y * width + x,
+            particleB: y * width + (x + 1),
+            restLength: 1,
+            damper: 0,
+            stretch: new vec3(),
           };
           p++;
         }
         if (y < height - 1) {
-          this.Constraints[p] = {
-            ParticleA: y * width + x,
-            ParticleB: (y + 1) * width + x,
-            RestLength: 1,
-            Damper: 0,
-            Stretch: vec3.create(),
+          this.constraints[p] = {
+            particleA: y * width + x,
+            particleB: (y + 1) * width + x,
+            restLength: 1,
+            damper: 0,
+            stretch: new vec3(),
           };
           p++;
         }
       }
     }
-    this.NumOfConstraints = p;
+    this.numOfConstraints = p;
 
-    // Cloth particle positions
+    // cloth particle positions
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        const pos = vec3.fromValues(x, 0, y);
-        this.P[y * width + x] = pos;
-        this.OldP[y * width + x] = vec3.clone(pos);
+        const pos = new vec3(x, 0, y);
+        this.p[y * width + x] = pos;
+        this.oldP[y * width + x] = vec3.clone(pos);
       }
     }
   }
 
   accumulateForces() {
-    for (let i = 0; i < this.W * this.H; i++) {
-      this.Forces[i] = vec3.fromValues(0, -this.Weight, 0);
+    for (let i = 0; i < this.w * this.h; i++) {
+      this.forces[i] = new vec3(0, -this.weight, 0);
     }
   }
 
   verletStep() {
-    for (let i = 0; i < this.W * this.H; i++) {
-      const oldPos = vec3.clone(this.P[i]);
-      const newPos = vec3.create();
-      vec3.add(newPos, this.P[i], vec3.sub(vec3.create(), this.P[i], this.OldP[i]));
-      vec3.scale(newPos, newPos, this.Friction);
-      vec3.add(newPos, newPos, vec3.scale(vec3.create(), this.Forces[i], deltaTime));
-      this.P[i] = newPos;
-      this.OldP[i] = oldPos;
+    for (let i = 0; i < this.w * this.h; i++) {
+      const oldPos = vec3.clone(this.p[i]);
+      const newPos = new vec3();
+      vec3.add(
+        newPos,
+        this.p[i],
+        vec3.sub(new vec3(), this.p[i], this.oldP[i])
+      );
+      vec3.mul(newPos, newPos, this.friction);
+      vec3.add(newPos, newPos, vec3.mul(new vec3(), this.forces[i], deltaTime));
+      this.p[i] = newPos;
+      this.oldP[i] = oldPos;
     }
   }
 
   satisfyConstraints() {
     for (let iteration = 0; iteration < numIterations; iteration++) {
-      if (this.HandleCollisions !== null) {
-        this.HandleCollisions(this);
+      if (this.handleCollisions !== null) {
+        this.handleCollisions(this);
       }
 
-      for (let i = 0; i < this.NumOfConstraints; i++) {
-        const constraint = this.Constraints[i];
-        const delta = vec3.sub(vec3.create(), this.P[constraint.ParticleB], this.P[constraint.ParticleA]);
+      for (let i = 0; i < this.numOfConstraints; i++) {
+        const constraint = this.constraints[i];
+        const delta = vec3.sub(
+          new vec3(),
+          this.p[constraint.particleB],
+          this.p[constraint.particleA]
+        );
         const deltaLength2 = vec3.lengthSq(delta);
 
-        if (deltaLength2 > constraint.RestLength * constraint.RestLength * 1.1 && Ttp.Keys['T'.charCodeAt(0)]) {
+        if (
+          deltaLength2 > constraint.restLength * constraint.restLength * 1.1 &&
+          keys["T".charCodeAt(0)]
+        ) {
           const stiffnessFactor =
-            (deltaLength2 - constraint.RestLength * constraint.RestLength) /
-            (deltaLength2 + (constraint.RestLength - constraint.Damper) * (constraint.RestLength - constraint.Damper)) -
+            (deltaLength2 - constraint.restLength * constraint.restLength) /
+              (deltaLength2 +
+                (constraint.restLength - constraint.damper) *
+                  (constraint.restLength - constraint.damper)) -
             0.5;
-          const deltaFactor = vec3.scale(vec3.create(), delta, stiffnessFactor);
+          const deltaFactor = vec3.mul(new vec3(), delta, stiffnessFactor);
 
-          constraint.Stretch = deltaFactor;
+          constraint.stretch = deltaFactor;
 
-          vec3.sub(this.P[constraint.ParticleA], this.P[constraint.ParticleA], deltaFactor);
-          vec3.add(this.P[constraint.ParticleB], this.P[constraint.ParticleB], deltaFactor);
+          vec3.sub(
+            this.p[constraint.particleA],
+            this.p[constraint.particleA],
+            deltaFactor
+          );
+          vec3.add(
+            this.p[constraint.particleB],
+            this.p[constraint.particleB],
+            deltaFactor
+          );
         } else {
-          constraint.Stretch = vec3.fromValues(0, 1, 0);
+          constraint.stretch = new vec3(0, 1, 0);
         }
       }
     }
 
-    if (this.HandleHardConstraints !== null) {
-      this.HandleHardConstraints(this);
+    if (this.handleHardConstraints !== null) {
+      this.handleHardConstraints(this);
     }
   }
 
-  update(Speed) {
-    if (!Ttp.IsPause) {
-      for (let i = 0; i < Speed; i++) {
+  update(speed) {
+    if (!isPause) {
+      for (let i = 0; i < speed; i++) {
         this.accumulateForces();
         this.verletStep();
         this.satisfyConstraints();
@@ -121,40 +166,44 @@ class Cloth {
   }
 
   draw() {
-    for (let y = 0; y < this.H; y++) {
-      for (let x = 0; x < this.W; x++) {
-        Ttp.DrawCylinder(
-          this.P[this.Constraints[y * this.W + x].ParticleA],
+    for (let y = 0; y < this.h; y++) {
+      for (let x = 0; x < this.w; x++) {
+        drawMarker(
+          this.p[this.constraints[y * this.w + x].particleA],
           0.3,
-          this.P[this.Constraints[y * this.W + x].ParticleB],
+          this.p[this.constraints[y * this.w + x].particleB],
           0.3,
-          vec4.scale(vec4.create(), this.Constraints[y * this.W + x].Stretch, 80),
-          MatrIdentity()
+          vec4.scale(
+            vec4.create(),
+            this.constraints[y * this.w + x].stretch,
+            80
+          ),
+          new matr4()
         );
       }
     }
 
-    for (let y = 0; y < this.H - 1; y++) {
-      for (let x = 0; x < this.W; x++) {
-        const constraint = this.Constraints[this.H * (this.W - 1) + y * this.W + x];
-        const stretch = constraint.Stretch;
-        const color = vec4.fromValues(1 - stretch[0] * 80, 1 - stretch[1] * 80, 1 - stretch[2] * 80, 1);
+    for (let y = 0; y < this.h - 1; y++) {
+      for (let x = 0; x < this.w; x++) {
+        const constraint =
+          this.constraints[this.h * (this.w - 1) + y * this.w + x];
+        const stretch = constraint.stretch;
+        const color = vec4.fromValues(
+          1 - stretch[0] * 80,
+          1 - stretch[1] * 80,
+          1 - stretch[2] * 80,
+          1
+        );
 
-        Ttp.DrawCylinder(
-          this.P[constraint.ParticleA],
+        drawMarker(
+          this.p[constraint.particleA],
           0.1,
-          this.P[constraint.ParticleB],
+          this.p[constraint.particleB],
           0.1,
           color,
-          MatrIdentity()
+          new matr4()
         );
       }
     }
   }
 }
-
-// Usage example
-const clothInstance = new Cloth();
-clothInstance.createDefault(10, 10, 1, 0.06, 1);
-clothInstance.update(10);
-clothInstance.draw();

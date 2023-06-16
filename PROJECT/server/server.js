@@ -12,15 +12,17 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const clients = [];
-
+const cams = [];
 io.on("connection", (socket) => {
   clients.push(socket);
+  cams.push(null);
+
   console.log(`Client connected with id: ${socket.id}`);
 
   socket.on("reloadRequest", (cam) => {
-    socket.cam = cam;
+    cams[clients.indexOf(socket)] = cam;
     console.log(clients);
-    socket.emit("reloadResponse", clients);
+    socket.emit("reloadResponse", cams);
   });
 
   socket.on("disconnect", () => {
@@ -28,6 +30,7 @@ io.on("connection", (socket) => {
     const index = clients.indexOf(socket);
     if (index > -1) {
       clients.splice(index, 1);
+      cams.splice(index, 1);
     }
   });
 });

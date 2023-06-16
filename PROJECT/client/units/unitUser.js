@@ -18,12 +18,21 @@ function render() {
     );
   }
   for (let userCam of users) {
-    primitive.draw(
-      myMatr4
-        .rotateY((side.angle(userCam.right) * 180) / Math.PI)
-        .mul(myMatr4.scale(new vec3(1, 1, 1)))
-        .mul(myMatr4.translate(userCam.userLoc))
-    );
+    if (userCam != null && cam.id != userCam.id)
+      primitive.draw(
+        myMatr4
+          .rotateY(
+            (side.angle(
+              new vec3(userCam.right.x, userCam.right.y, userCam.right.z)
+            ) *
+              180) /
+              Math.PI
+          )
+          .mul(myMatr4.scale(new vec3(1, 1, 1)))
+          .mul(
+            myMatr4.translate(new vec3(userCam.userLoc.x, 0, userCam.userLoc.z))
+          )
+      );
   }
 }
 async function init() {

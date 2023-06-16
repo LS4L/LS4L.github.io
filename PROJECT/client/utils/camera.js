@@ -10,6 +10,7 @@ export class camera {
     this.matrView = new matr4();
     this.matrProj = new matr4();
     this.matrVP = new matr4();
+    this.id = Math.random().toString();
     this.setDef();
   }
   camSet(loc, at, up, pos, userLoc) {
@@ -50,7 +51,7 @@ export class camera {
     this.projFarClip = projFarClip;
 
     /* Correct aspect ratio */
-    if (this.frameW > this.frameH) rx *= this.FrameW / this.frameH;
+    if (this.frameW > this.frameH) rx *= this.frameW / this.frameH;
     else ry *= this.frameH / this.frameW;
 
     let myMatr4 = new matr4();

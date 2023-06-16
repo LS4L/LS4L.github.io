@@ -21,17 +21,18 @@ let units = [];
 
 export async function init() {
   unitFractalSkyAdd();
-  /*
-    unitCubeAdd();
-    unitTetrAdd();
-    unitOctaAdd();
 
-  
-    unitDodeAdd();*/
+  unitCubeAdd();
+  unitTetrAdd();
+  unitOctaAdd();
+
+  unitDodeAdd();
+  /*
+   */
   unitCowAdd();
-  //unitPlaneAdd();
+  unitPlaneAdd();
   unitIcoAdd();
-  //unitMrkAdd();
+  unitMrkAdd();
   unitUserAdd();
   unitObjAdd();
   //unitMarkersAdd();

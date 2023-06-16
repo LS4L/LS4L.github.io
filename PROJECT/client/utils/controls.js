@@ -174,7 +174,7 @@ export function floatingCamera() {
 
 function walking() {
   /* Upscaling */
-  cam.pos = cam.pos.add(cam.pos.mul(-mouse.dz * 0.01));
+  cam.pos = cam.pos.add(cam.pos.mul(mouse.dz * 0.001));
 
   let myMatr4 = new matr4();
   /* Rotating */

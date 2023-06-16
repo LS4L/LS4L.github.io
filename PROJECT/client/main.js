@@ -15,7 +15,7 @@ export let users = [];
 
 window.addEventListener("load", () => {
   socket.on("reloadResponse", (res) => {
-    users = res.map((it) => it.cam);
+    users = res;
   });
 
   canvas = document.getElementById("glCanvas");
@@ -94,8 +94,9 @@ const draw = () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   ControlCamera();
-  cam.frameW = canvas.width;
-  cam.frameH = canvas.height;
+  cam.setSize(canvas.width, canvas.height);
+  //cam.frameH = canvas.height;
+  //cam.frameW = canvas.width;
   cam.camSet(cam.loc, cam.at, cam.up, cam.pos, cam.userLoc);
 
   coords.innerHTML =
@@ -131,8 +132,8 @@ const draw = () => {
   units.render();
 
   mouse.dx = mouse.dy = mouse.dz = 0; //костыль because idk how to see end of mouse move
-  socket.emit("reloadRequest");
-  window.requestAnimationFrame(draw, cam);
+  socket.emit("reloadRequest", cam);
+  window.requestAnimationFrame(draw);
 };
 
 export async function initGL() {
@@ -145,8 +146,7 @@ export async function initGL() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   ControlCamera();
-  cam.frameW = canvas.width;
-  cam.frameH = canvas.height;
+  cam.setSize(canvas.width, canvas.height);
   cam.camSet(cam.loc, cam.at, cam.up, cam.pos, cam.userLoc);
 
   await shaderAdd("default");
