@@ -12,11 +12,70 @@ export let gl;
 let canvas;
 let coords;
 export let users = [];
+let messagesHTML;
+
+function userReloadResponse(res) {
+  users = res;
+}
+
+function msgReloadResponse(res) {
+  messagesHTML.innerHTML = res
+    .map(
+      (it) =>
+        `<li id="${
+          it.sender.userName == socket.userName ? "user" : "notUser"
+        }">${it.sender.userName + " : " + it.text}
+        <button class="deleteMessage" id="${it._id.toString()}" style="
+        float: right;"> Delete</button><span style="
+        float: right;">${it.date}</span>
+        </li>`
+    )
+    .join("");
+  messagesHTML.scrollTo(0, messagesHTML.scrollHeight);
+  window.scrollTo(0, messagesHTML.scrollHeight);
+  document.getElementById("msgbox").scrollTop =
+    document.getElementById("msgbox").scrollHeight;
+  for (let btn of document.getElementsByClassName("deleteMessage")) {
+    btn.onclick = () => {
+      socket.emit("deleteMessage", btn.id);
+      // socket.emit("reloadRequest");
+    };
+  }
+}
+
+function connect() {
+  let userName = prompt("Enter your name");
+  console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+  socket.emit("reloadRequest");
+  socket.emit("auth", userName);
+  socket.userName = userName;
+}
+
+function setupSocket() {
+  socket.on("connect", connect);
+  socket.on("userReloadResponse", userReloadResponse);
+  socket.on("msgReloadResponse", msgReloadResponse);
+  socket.on("disconnect", () => {
+    console.log("disconnected"); // undefined
+  });
+}
 
 window.addEventListener("load", () => {
-  socket.on("reloadResponse", (res) => {
-    users = res;
-  });
+  messagesHTML = document.getElementById("messages");
+  document.getElementById("id1").onkeyup = (ev) => {
+    if (ev.code === "Enter") {
+      const value = document.getElementById("id1").value;
+      console.log(value);
+      document.getElementById("id1").value = "";
+      socket.emit("MessageToServer", value);
+    }
+  };
+
+  document.getElementById("clearButton").onclick = () => {
+    socket.emit("clearAllMessages");
+  };
+
+  setupSocket();
 
   canvas = document.getElementById("glCanvas");
   gl = canvas.getContext("webgl2");
@@ -28,9 +87,10 @@ window.addEventListener("load", () => {
   window.onmousedown = controls.handleMouseDown;
   window.onmouseup = controls.handleMouseUp;
   window.addEventListener("contextmenu", (e) => e.preventDefault());
-  window.addEventListener("wheel", (event) => {
+  //window.addEventListener("wheel",
+  canvas.onscroll = (event) => {
     controls.handleMouseZoom(event);
-  });
+  };
   window.onscroll = () => window.scroll(0, 0);
 
   window.addEventListener("keyup", (event) => {
