@@ -50,7 +50,9 @@ io.on("connection", (socket) => {
         ":" +
         date.getMinutes(),
     });
-    socket.isChanged = true;
+    clients.forEach((client) => {
+      client.isChanged = true;
+    });
   });
 
   socket.on("reloadRequest", (cam) => {
@@ -82,11 +84,15 @@ io.on("connection", (socket) => {
 
   socket.on("deleteMessage", (messageId) => {
     messages.findOneAndDelete({ _id: new ObjectId(messageId) });
-    socket.isChanged = true;
+    clients.forEach((client) => {
+      client.isChanged = true;
+    });
   });
   socket.on("clearAllMessages", () => {
     if (socket.userName == "ls4") messages.deleteMany();
-    socket.isChanged = true;
+    clients.forEach((client) => {
+      client.isChanged = true;
+    });
   });
 });
 

@@ -85,7 +85,7 @@ export class vec3 {
   normalize() {
     return this.div(this.len());
   }
-  lerp(vec, c) {
+  lerp(vec, c = 0.5) {
     return new vec3(
       this.x + (vec.x - this.x) * c,
       this.y + (vec.y - this.y) * c,
@@ -102,7 +102,7 @@ export class vec3 {
     );
   }
 
-  angle(vec) {
+  angle(vec, up = new vec3(0, 1, 0)) {
     if (vec.len2() == 0 || this.len2() == 0) return 0;
     let cross = this.cross(vec);
     let dot = this.dot(vec);
@@ -110,7 +110,7 @@ export class vec3 {
     let cosTh = dot / (this.len() * vec.len());
 
     let angle = Math.acos(cosTh);
-    if (cross.dot(new vec3(0, 1, 0)) < 0) angle = -angle;
+    if (cross.dot(up) < 0) angle = -angle;
 
     return angle;
   }

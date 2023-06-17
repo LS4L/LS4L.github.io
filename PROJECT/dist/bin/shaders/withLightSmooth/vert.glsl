@@ -15,5 +15,6 @@ void main()
     color = in_pos;
     gl_Position = projection * modelView * world * in_pos;
     drawPos = vec3(in_pos);//vec3(gl_Position); 
-    vNormal = vec3(inverse(transpose(world)) * vec4(normal, 1));
+   // vNormal = vec3(inverse(transpose(world)) * vec4(normal, 1));
+    vNormal = vec3(inverse(transpose(world)) * vec4(normal, 0));
 }

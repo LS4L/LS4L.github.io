@@ -1,4 +1,4 @@
-import { gl } from "../main.js";
+import { gl, canvas } from "../main.js";
 import { unitAdd } from "./units.js";
 import { shaderAdd } from "../rnd/shaders.js";
 import { mouse, cam } from "../utils/controls.js";
@@ -58,8 +58,8 @@ function render() {
   gl.viewport(
     0,
     0,
-    gl.canvas.width,
-    gl.canvas.height
+    cam.frameW,
+    cam.frameH
     //  Math.max(gl.canvas.width, gl.canvas.height)
   );
 

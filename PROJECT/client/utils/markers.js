@@ -4,21 +4,11 @@ import { matr4, vec3, vec4 } from "../utils/mth.js";
 import { cam } from "../utils/controls.js";
 import { shaderAdd, useShader } from "../rnd/shaders.js";
 
-/*const cubeVertexPositions = new Float32Array([
-  1, 2, -1, 1, 2, 1, 1, 0, 1, 1, 0, -1, -1, 2, 1, -1, 2, -1, -1, 0, -1, -1, 0,
-  1, -1, 2, 1, 1, 2, 1, 1, 2, -1, -1, 2, -1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1,
-  0, 1, 1, 2, 1, -1, 2, 1, -1, 0, 1, 1, 0, 1, -1, 1, -1, 1, 1, -1, 1, -1, -1,
-  -1, -1, -1,
-]);
-const cubeVertexIndices = new Uint16Array([
-  0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14,
-  15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23,
-]);*/
-
 const cubeVertexPositions = new Float32Array([
-  0, 0, 0, 0.5, 0.5, 0, 1, 1, 0, -0.5, -0.5, 0,
+  0, 1, 0, 0, 0, 0.5, 0, 0, -0.5,
+
+  0, 1, 0, 0.5, 0, 0, -0.5, 0, 0,
 ]);
-const cubeVertexIndices = new Uint16Array([0, 1, 2, 2, 3, 0]);
 
 let matrices = [];
 let worldLoc;
@@ -27,6 +17,7 @@ let cubeVertexArray;
 let shaderI;
 function render() {
   gl.useProgram(shaderI.shaderProgram);
+  gl.bindVertexArray(cubeVertexArray);
 
   const projectionLoc = gl.getUniformLocation(
     shaderI.shaderProgram,
@@ -52,15 +43,14 @@ function render() {
   let color = new vec4(1, 0, 1, 1);
   gl.uniform4f(colorLoc, color.x, color.y, color.z, color.w);
 
-  // just allocate the buffer
-
   matrices.forEach((it) => {
     gl.uniformMatrix4fv(worldLoc, false, it);
-    gl.drawElements(
+    gl.drawArrays(
       gl.TRIANGLES,
-      36, // num vertices to process
-      gl.UNSIGNED_SHORT, // type of indices
-      0 // offset on bytes to indice
+      0,
+      6 // num vertices to process
+      // gl.UNSIGNED_SHORT, // type of indices
+      //0 // offset on bytes to indice
     );
   });
   matrices = [];
@@ -71,10 +61,8 @@ async function init() {
   shaderI = await shaderAdd("markers");
   cubeVertexArray = gl.createVertexArray();
   gl.bindVertexArray(cubeVertexArray);
-  useShader(shaderI, cubeVertexPositions, cubeVertexIndices);
+  useShader(shaderI, cubeVertexPositions);
   gl.bindVertexArray(null);
-  //gl.bindVertexArray(markVertexArray);
-  /* aaa */
 }
 
 export function unitMrkAdd() {
@@ -84,25 +72,32 @@ export function unitMrkAdd() {
 export function markerDraw(
   start = new vec3(0),
   end = new vec3(100),
-  width = 0.1
+  width = 1
   //   color = new vec4(1, 0, 1, 1)
 ) {
   let myMatr4 = new matr4();
   let up = new vec3(0, 1, 0);
+  //let right = new vec3(0, 0, 1);
+
   let centered = end.sub(start);
   matrices.push(
     new Float32Array(
       myMatr4
         .scale(new vec3(width, centered.len(), width))
-        .mul(
-          myMatr4.rotateX(
-            (up.angle(new vec3(0, centered.y, centered.z)) * 180) / Math.PI
+        /*.mul(
+          myMatr4.rotateZ(
+            (up.angle(new vec3(centered.x, centered.y, 0), right) * 180) /
+              Math.PI
           )
         )
         .mul(
           myMatr4.rotateY(
-            (up.angle(new vec3(centered.x, centered.y, 0)) * 180) / Math.PI
+            90 +
+              (right.angle(new vec3(centered.x, 0, centered.z)) * 180) / Math.PI
           )
+        )*/
+        .mul(
+          myMatr4.rotate(180, centered.normalize().lerp(up, 0.5).normalize())
         )
         .mul(myMatr4.translate(start))
         .a()

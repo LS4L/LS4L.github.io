@@ -10,6 +10,7 @@ import { unitPlaneAdd } from "./unitPlane.js";
 import { unitDodeAdd } from "./unitDodecahedron.js";
 import { unitCowAdd } from "./unitCow.js";
 import { unitUserAdd } from "./unitUser.js";
+import { unitMapAdd } from "./unitMap.js";
 import { unitFractalSkyAdd } from "./unitFractalSky.js";
 export class unit {
   constructor(init, render) {
@@ -30,13 +31,14 @@ export async function init() {
   /*
    */
   unitCowAdd();
-  unitPlaneAdd();
+  // unitPlaneAdd();
   unitIcoAdd();
   unitMrkAdd();
   unitUserAdd();
   unitObjAdd();
-  //unitMarkersAdd();
-  // unitDbgAdd();
+  unitMarkersAdd();
+  unitDbgAdd();
+  unitMapAdd();
 
   for (let i = 0; i < units.length; i++) {
     await units[i].init();

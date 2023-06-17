@@ -87,10 +87,9 @@ window.addEventListener("load", () => {
   window.onmousedown = controls.handleMouseDown;
   window.onmouseup = controls.handleMouseUp;
   window.addEventListener("contextmenu", (e) => e.preventDefault());
-  //window.addEventListener("wheel",
-  canvas.onscroll = (event) => {
+  window.addEventListener("wheel", (event) => {
     controls.handleMouseZoom(event);
-  };
+  });
   window.onscroll = () => window.scroll(0, 0);
 
   window.addEventListener("keyup", (event) => {

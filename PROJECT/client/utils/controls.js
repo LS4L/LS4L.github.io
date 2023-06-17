@@ -61,11 +61,11 @@ export function handleMouseZoom(event) {
 }
 
 export function handleKeyUp(event) {
-  keys[event.key] = 0;
+  keys[event.code] = 0;
 }
 
 export function handleKeyDown(event) {
-  keys[event.key] = 1;
+  keys[event.code] = 1;
 }
 
 let angleSpeed = 0.05;
@@ -127,17 +127,17 @@ export function floatingCamera() {
   speed += keys["Shift"] ? speedUp : 0;
   /* Arrows */
   cam.loc = cam.loc
-    .add(cam.dir.mul(!!keys["w"] * !keys["Control"] * speed))
-    .sub(cam.dir.mul(!!keys["s"] * !keys["Control"] * speed))
-    .sub(cam.right.mul(!!keys["a"] * !keys["Control"] * speed))
-    .add(cam.right.mul(!!keys["d"] * !keys["Control"] * speed));
+    .add(cam.dir.mul(!!keys["KeyW"] * !keys["ControlLeft"] * speed))
+    .sub(cam.dir.mul(!!keys["KeyS"] * !keys["ControlLeft"] * speed))
+    .sub(cam.right.mul(!!keys["KeyA"] * !keys["ControlLeft"] * speed))
+    .add(cam.right.mul(!!keys["KeyD"] * !keys["ControlLeft"] * speed));
 
   /* CamAt via arrows */
   cam.at = cam.at
-    .add(cam.dir.mul(!!keys["w"] * !keys["Control"] * speed))
-    .sub(cam.dir.mul(!!keys["s"] * !keys["Control"] * speed))
-    .sub(cam.right.mul(!!keys["a"] * !keys["Control"] * speed))
-    .add(cam.right.mul(!!keys["d"] * !keys["Control"] * speed));
+    .add(cam.dir.mul(!!keys["KeyW"] * !keys["ControlLeft"] * speed))
+    .sub(cam.dir.mul(!!keys["KeyS"] * !keys["ControlLeft"] * speed))
+    .sub(cam.right.mul(!!keys["KeyA"] * !keys["ControlLeft"] * speed))
+    .add(cam.right.mul(!!keys["KeyD"] * !keys["ControlLeft"] * speed));
 
   speed -= keys["Shift"] ? speedUp : 0; /*
 
@@ -190,10 +190,10 @@ function walking() {
   cam.userDir.y = 0;
   /* Walking */
   cam.userLoc = cam.userLoc
-    .add(cam.userDir.mul(!!keys["w"] * !keys["Control"] * speed))
-    .add(cam.userDir.mul(-!!keys["s"] * speed))
-    .add(cam.userDir.mulMatr(myMatr4.rotateY(90)).mul(!!keys["a"] * speed))
-    .add(cam.userDir.mulMatr(myMatr4.rotateY(90)).mul(-!!keys["d"] * speed));
+    .add(cam.userDir.mul(!!keys["KeyW"] * !keys["ControlLeft"] * speed))
+    .add(cam.userDir.mul(-!!keys["KeyS"] * speed))
+    .add(cam.userDir.mulMatr(myMatr4.rotateY(90)).mul(!!keys["KeyA"] * speed))
+    .add(cam.userDir.mulMatr(myMatr4.rotateY(90)).mul(-!!keys["KeyD"] * speed));
 
   cam.at = cam.userLoc;
   cam.dir = cam.pos.neg().normalize();
