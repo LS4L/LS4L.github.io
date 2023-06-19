@@ -148,3 +148,61 @@ gl.texImage2D(this.type, 0, gl.RGBA, img.w, img.h, 0, gl.RGBA, gl.UNSIGNED_BYTE,
   fclose(F);
   return TRUE;
 }
+
+
+async function loadG3DMModel(Pr, fileName) {
+  try {
+    const response = await fetch(fileName);
+    const text = await response.text();
+    const lines = text.split('\n');
+    
+    Pr.V = [];
+    Pr.I = [];
+    let nv = 0;
+    let nf = 0;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (line.startsWith('v ')) {
+        const coords = line.split(/\s+/).slice(1).map(parseFloat);
+        
+        if (coords.length !== 3) {
+          console.error(`Invalid vertex coordinates at line ${i + 1}`);
+          return false;
+        }
+        
+        Pr.V[nv++] = { P: { x: coords[0], y: coords[1], z: coords[2] } };
+      } else if (line.startsWith('f ')) {
+        const indices = line.split(/\s+/).slice(1).map(parseIndex);
+        
+        if (indices.length < 3) {
+          console.error(`Invalid face definition at line ${i + 1}`);
+          return false;
+        }
+        
+        for (let j = 2; j < indices.length; j++) {
+          Pr.I[nf++] = indices[0];
+          Pr.I[nf++] = indices[j - 1];
+          Pr.I[nf++] = indices[j];
+        }
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Error loading model from file: ${error}`);
+    return false;
+  }
+}
+
+function parseIndex(indexStr) {
+  const index = parseInt(indexStr, 10);
+  
+  if (isNaN(index)) {
+    throw new Error(`Invalid index: ${indexStr}`);
+  }
+  
+  return index - 1;
+}
+
