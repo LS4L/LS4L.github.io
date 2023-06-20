@@ -40,7 +40,7 @@ function render() {
     new Float32Array(cam.matrView.a().join().split(","))
   );
 
-  let color = new vec4(1, 0, 1, 1);
+  let color = new vec4(0.8, 0.47, 0.3, 1);
   gl.uniform4f(colorLoc, color.x, color.y, color.z, color.w);
 
   matrices.forEach((it) => {

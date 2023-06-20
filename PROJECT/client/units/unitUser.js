@@ -34,6 +34,9 @@ function render() {
           )
       );
   }
+  let north = new vec3(0, 0, -1);
+  document.getElementById("compassBox").style.backgroundPosition =
+    (north.angle(cam.userDir) * 1800) / Math.PI + 400 + "px 0px";
 }
 async function init() {
   let obj;

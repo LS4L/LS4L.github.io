@@ -2,11 +2,11 @@ body {
     background-color: black;
     color: aquamarine;
     margin: 0;
+    overflow: hidden;
 }
 
   div {
-    /*overflow: hidden;
-    */height: 100%;
+    height: 100%;
     width: 100%;
     user-select: none;
   }

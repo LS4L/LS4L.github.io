@@ -80,6 +80,16 @@ io.on("connection", (socket) => {
   });
   socket.on("auth", (name) => {
     socket.userName = name;
+
+    //should not be here
+    socket.emit("userReloadResponse", cams);
+
+    let res = messages.find().toArray();
+    res.then((it) => {
+      console.log(it);
+      socket.emit("msgReloadResponse", it);
+    });
+    socket.isChanged = false;
   });
 
   socket.on("deleteMessage", (messageId) => {

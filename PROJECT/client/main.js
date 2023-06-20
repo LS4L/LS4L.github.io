@@ -22,11 +22,11 @@ function msgReloadResponse(res) {
   messagesHTML.innerHTML = res
     .map(
       (it) =>
-        `<li id="${
+        `<li class="message" id="${
           it.sender.userName == socket.userName ? "user" : "notUser"
         }">${it.sender.userName + " : " + it.text}
         <button class="deleteMessage" id="${it._id.toString()}" style="
-        float: right;"> Delete</button><span style="
+        float: right; border-radius: 10px;"> Delete</button><span style="
         float: right;">${it.date}</span>
         </li>`
     )

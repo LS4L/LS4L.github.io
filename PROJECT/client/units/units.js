@@ -28,15 +28,15 @@ export async function init() {
   unitOctaAdd();
 
   unitDodeAdd();
-  /*
-   */
+
   unitCowAdd();
   // unitPlaneAdd();
   unitIcoAdd();
+  unitMarkersAdd();
+
   unitMrkAdd();
   unitUserAdd();
   unitObjAdd();
-  unitMarkersAdd();
   unitDbgAdd();
   unitMapAdd();
 

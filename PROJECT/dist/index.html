@@ -11,6 +11,7 @@
     <script type="module" src="./bundle.js"></script>
     <script type="module"></script>
 
+    <div id="places"></div>
     <div style="position: fixed">
       <input type="file" id="file" />
 
@@ -158,13 +159,33 @@
       #messages > li {
         padding: 0.5rem 1rem;
       }
-      #messages > li:nth-child(odd) {
+      .message {
         background: #efefefc0;
-      }
-      #messages > li:nth-child(even) {
-        background: #afafff50;
+        border-radius: 10px;
+        margin: 6px;
       }
     </style>
+    <div
+      style="
+        overflow: auto;
+        right: 32vw;
+        width: 36vw;
+        top: 24px;
+        height: 48px;
+        background: #afafffa0;
+        backdrop-filter: blur(5px);
+        position: fixed;
+        border-radius: 24px;
+        background-image: url(./bin/Images/Compass.png);
+        background-repeat: repeat-x;
+      "
+      id="compassBox"
+    >
+      <img
+        style="margin-left: calc(50% - 24px); opacity: 0.8"
+        src="./bin/Images/Cursor.png"
+      />
+    </div>
     <div
       style="
         overflow: auto;
@@ -173,6 +194,7 @@
         left: 70vw;
         right: 0;
         bottom: 3rem;
+        top: 0;
       "
       id="msgbox"
     >

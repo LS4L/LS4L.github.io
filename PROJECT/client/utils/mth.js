@@ -123,6 +123,9 @@ export class vec3 {
   get zzz() {
     return new vec3(this.z, this.z, this.z);
   }
+  copy() {
+    return new vec3(this.x, this.y, this.z);
+  }
   /* ... */
 }
 

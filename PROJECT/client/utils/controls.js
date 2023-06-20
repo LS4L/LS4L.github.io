@@ -178,6 +178,7 @@ function walking() {
 
   let myMatr4 = new matr4();
   /* Rotating */
+
   /* Mouse x */
   cam.pos = cam.pos.mulMatr(
     myMatr4.rotateY(-mouse.isDown * angleSpeed * mouse.dx)
@@ -194,12 +195,19 @@ function walking() {
     .add(cam.userDir.mul(-!!keys["KeyS"] * speed))
     .add(cam.userDir.mulMatr(myMatr4.rotateY(90)).mul(!!keys["KeyA"] * speed))
     .add(cam.userDir.mulMatr(myMatr4.rotateY(90)).mul(-!!keys["KeyD"] * speed));
+  cam.pos = cam.pos.mulMatr(
+    myMatr4.rotate(mouse.isRDown * angleSpeed * mouse.dx, cam.up)
+  );
 
   cam.at = cam.userLoc;
   cam.dir = cam.pos.neg().normalize();
   cam.loc = cam.userLoc.add(cam.pos);
   cam.right = cam.userDir.cross(new vec3(0, 1, 0));
   cam.up = cam.right.cross(cam.dir);
+
+  cam.pos = cam.pos.mulMatr(
+    myMatr4.rotate(-mouse.isRDown * angleSpeed * mouse.dx, cam.up)
+  );
 }
 
 export function ControlCamera() {
