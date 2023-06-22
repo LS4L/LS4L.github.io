@@ -328,7 +328,7 @@ async function init() {
 }
 
 export function unitMapAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "Map");
 }
 
 function lon2tile(lon, zoom) {

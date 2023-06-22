@@ -14,10 +14,12 @@ export class texture {
 
 export class mtl {
   constructor(
+    name = "Name not set",
     ka = new vec3(0.25, 0.25, 0.25),
     kd = new vec3(0.4, 0.4, 0.4),
     ks = new vec3(0.774597, 0.774597, 0.774597),
     ph = 76.8,
+    trans = 1,
     shaderName = null,
     tex = [null]
   ) {
@@ -25,8 +27,10 @@ export class mtl {
     this.kd = kd;
     this.ks = ks;
     this.ph = ph;
+    this.trans = trans;
     this.shaderName = shaderName;
     this.tex = [...tex];
+    this.name = name;
   }
 }
 export function loadObj(input) {
@@ -127,7 +131,7 @@ export class prim {
   constructor(
     vBuf,
     iBuf = null,
-    mtl = 0,
+    mtl = null,
     trans = new matr4(),
     type = gl.TRIANGLES,
     va = null
@@ -220,57 +224,47 @@ export class prim {
 }
 
 export class prims {
-  constructor(prims, trans) {
-    this.prims = prims;
-    this.trans = trans;
-  }
-}
-
-import { rndShdAddnonI } from "./rnd";
-
-export class Prims {
   constructor(numOfPrims) {
     this.numOfPrims = numOfPrims;
-    this.trans = matrIdentity();
+    this.trans = new matr4();
     this.minBB = this.maxBB = vec3(0);
     this.prims = [];
   }
 
-  draw = (world) => {
+  draw(world) {
     const m = this.trans.mulMatr(world);
 
-    rndShdAddnonI[0] = this.numOfPrims;
-    for (let i = 0; i < this.numOfPrims; i++)
-      if (rnd.mtl.get(this.prims[i].mtlNo).trans === 1) {
-        rndShdAddnonI[1] = i;
-        this.prims[i].draw(m);
-      }
-
-    window.gl.enable(window.gl.CULL_FACE);
-
-    window.gl.cullFace(window.gl.FRONT);
-    for (let i = 0; i < this.numOfPrims; i++)
-      if (rnd.mtl.get(this.prims[i].mtlNo).trans !== 1) {
-        rndShdAddnonI[1] = i;
-        this.prims[i].draw(m);
-      }
-
-    window.gl.cullFace(window.gl.BACK);
-    for (let i = 0; i < this.numOfPrims; i++)
-      if (rnd.mtl.get(this.prims[i].mtlNo).trans !== 1) {
-        rndShdAddnonI[1] = i;
-        this.prims[i].draw(m);
-      }
-
-    window.gl.disable(window.gl.CULL_FACE);
-  };
+    for (let i = 0; i < this.numOfPrims; i++) {
+      this.prims[i].draw(m, this.numOfPrims, i);
+    }
+  }
 }
 
+function addTexture() {
+  var texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    1,
+    1,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    data
+  );
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  return texture;
+}
 export async function primsLoad(fileName) {
   const response = await fetch(fileName);
   let dataBuf = await response.arrayBuffer();
   let buf = new Uint8Array(dataBuf);
 
+  let materials = [];
+  let textures = [];
   let ptr = 0;
 
   const sign = buf
@@ -282,7 +276,7 @@ export async function primsLoad(fileName) {
     dataBuf.slice(ptr, (ptr += 4 * 3))
   );
 
-  let prs = new Prims(numOfPrims);
+  let prs = new prims(numOfPrims);
 
   for (let i = 0; i < numOfPrims; i++) {
     let [numOfV, numOfI, mtlNo] = new Uint32Array(
@@ -294,8 +288,9 @@ export async function primsLoad(fileName) {
     );
     let ind = new Uint32Array(dataBuf.slice(ptr, (ptr += 4 * numOfI)));
 
-    prs.prims.push(new Prim(window.gl.TRIANGLES, v, ind));
-    prs.prims[i].mtlNo = rnd.mtl.mtlSize + mtlNo;
+    prs.prims.push(new prim(v, ind));
+    prs.prims[i].mtl = materials[mtlNo];
+    prs.prims[i].create();
     if (i === 0)
       (prs.minBB = prs.prims[0].minBB), (prs.maxBB = prs.prims[0].maxBB);
     else {
@@ -325,19 +320,17 @@ export async function primsLoad(fileName) {
       );
     let s = new Float32Array(dataBuf.slice(ptr, (ptr += 4 * 11)));
     let txtarr = new Int32Array(dataBuf.slice(ptr, (ptr += 4 * 8)));
-    let mtl = new Mtl(
+    let material = new mtl(
       mtlName,
-      vec3(s[0], s[1], s[2]),
-      vec3(s[3], s[4], s[5]),
-      vec3(s[6], s[7], s[8]),
+      new vec3(s[0], s[1], s[2]),
+      new vec3(s[3], s[4], s[5]),
+      new vec3(s[6], s[7], s[8]),
       s[9],
       s[10],
       0
     );
-    for (let i = 0; i < 8; i++)
-      mtl.tex[i] = txtarr[i] == -1 ? -1 : txtarr[i] + rnd.tex.texSize;
-    rnd.mtl.add(mtl);
-
+    for (let i = 0; i < 8; i++) mtl.tex[i] = textures[txtarr[i]];
+    materials[m] = material;
     ptr += 300 + 4;
   }
 
@@ -358,7 +351,7 @@ export async function primsLoad(fileName) {
       bits[i + 2] = t;
     }
 
-    rnd.tex.addImg(texName, bits, w, h);
+    textures[t] = addTexture(texName, bits, w, h);
   }
 
   return prs;

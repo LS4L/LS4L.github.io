@@ -56,5 +56,5 @@ async function init() {
   /* aaa */
 }
 export function unitFracAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "fract");
 }

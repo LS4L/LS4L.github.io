@@ -152,7 +152,15 @@ const draw = () => {
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  gl.viewport(
+    0,
+    0,
+    cam.frameW,
+    cam.frameH
+    //  Math.max(gl.canvas.width, gl.canvas.height)
+  );
   ControlCamera();
+
   cam.setSize(canvas.width, canvas.height);
   //cam.frameH = canvas.height;
   //cam.frameW = canvas.width;

@@ -56,8 +56,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("reloadRequest", (cam) => {
-    cams[clients.indexOf(socket)] = cam;
-    console.log(clients);
+    if (cam != undefined) {
+      cam.userName = socket.userName;
+      cams[clients.indexOf(socket)] = cam;
+    }
+    //console.log(clients);
     socket.emit("userReloadResponse", cams);
 
     if (socket.isChanged) {

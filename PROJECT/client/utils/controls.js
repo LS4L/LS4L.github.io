@@ -32,7 +32,7 @@ cam.camSet(
   new vec3(0, 0, -6),
   new vec3(0, 1, 0),
   new vec3(1, 1, 1),
-  new vec3(0, 2, 0)
+  new vec3(0, 0.8, 0)
 );
 
 export function handleMouseMove(event) {
@@ -178,7 +178,6 @@ function walking() {
 
   let myMatr4 = new matr4();
   /* Rotating */
-
   /* Mouse x */
   cam.pos = cam.pos.mulMatr(
     myMatr4.rotateY(-mouse.isDown * angleSpeed * mouse.dx)
@@ -195,22 +194,68 @@ function walking() {
     .add(cam.userDir.mul(-!!keys["KeyS"] * speed))
     .add(cam.userDir.mulMatr(myMatr4.rotateY(90)).mul(!!keys["KeyA"] * speed))
     .add(cam.userDir.mulMatr(myMatr4.rotateY(90)).mul(-!!keys["KeyD"] * speed));
-  cam.pos = cam.pos.mulMatr(
-    myMatr4.rotate(mouse.isRDown * angleSpeed * mouse.dx, cam.up)
-  );
 
   cam.at = cam.userLoc;
   cam.dir = cam.pos.neg().normalize();
   cam.loc = cam.userLoc.add(cam.pos);
   cam.right = cam.userDir.cross(new vec3(0, 1, 0));
   cam.up = cam.right.cross(cam.dir);
+}
 
-  cam.pos = cam.pos.mulMatr(
-    myMatr4.rotate(-mouse.isRDown * angleSpeed * mouse.dx, cam.up)
+let myMatr4 = new matr4();
+
+cam.speed = 0;
+cam.userDir = new vec3(1, 0, 0);
+cam.pos = new vec3(-1, 1, 0);
+let acceleration = 0.2;
+let deceleration = 1.2;
+let rotAngle = 0;
+let maxRotAngle = 45;
+let angleAcceleration = 0.2;
+let angleDeceleration = 1.1;
+
+function bike() {
+  cam.speed += (!!keys["KeyW"] - !!keys["KeyS"]) * acceleration;
+  cam.speed /= deceleration;
+
+  /* Upscaling */
+  cam.pos = cam.pos.add(cam.pos.mul(mouse.dz * 0.001));
+
+  rotAngle += (-!!keys["KeyD"] + !!keys["KeyA"]) * angleAcceleration;
+  if (rotAngle > maxRotAngle) rotAngle = maxRotAngle;
+  if (rotAngle < -maxRotAngle) rotAngle = -maxRotAngle;
+  rotAngle /= angleDeceleration;
+
+  cam.userDir = cam.userDir.mulMatr(
+    myMatr4.rotateY(rotAngle * Math.sqrt(Math.abs(cam.speed)))
   );
+  /* Walking */
+  cam.pos = cam.pos.mulMatr(
+    myMatr4.rotateY(rotAngle * Math.sqrt(Math.abs(cam.speed)))
+  );
+  cam.userLoc = cam.userLoc.add(cam.userDir.mul(cam.speed));
+
+  /* Rotate around bike: this do not changes driving direction */
+  /* Mouse x */
+  cam.pos = cam.pos.mulMatr(
+    myMatr4.rotateY(-mouse.isDown * angleSpeed * mouse.dx)
+  ); /* !!Ani->DeltaTime */
+  /* Mouse y */
+  cam.pos = cam.pos.mulMatr(
+    myMatr4.rotate(-mouse.isDown * angleSpeed * mouse.dy, cam.right)
+  );
+
+  cam.at = cam.userLoc;
+  cam.dir = cam.pos.neg().normalize();
+  cam.loc = cam.userLoc.add(cam.pos);
+  let correctDir = new vec3(cam.dir.x, 0, cam.dir.z);
+  cam.right = correctDir.cross(new vec3(0, 1, 0));
+  cam.up = cam.right.cross(cam.dir);
 }
 
 export function ControlCamera() {
+  let isBike = true;
   if (!isWalking) floatingCamera();
-  else walking();
+  else if (!isBike) walking();
+  else bike();
 }

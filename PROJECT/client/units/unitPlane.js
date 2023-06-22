@@ -78,5 +78,5 @@ async function init() {
   /* aaa */
 }
 export function unitPlaneAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "Plane");
 }

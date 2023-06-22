@@ -19,5 +19,5 @@ function render() {
 }
 async function init() {}
 export function unitDbgAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "Debug");
 }

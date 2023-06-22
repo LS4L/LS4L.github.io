@@ -97,6 +97,7 @@
           value="3"
         /><label for="b">b</label>
       </form>
+      <form id="unitsChecker"></form>
       <img
         id="CGSG-Logo"
         src="./bin/Images/CGSG-Logo.svg"
@@ -203,6 +204,40 @@
         <input id="id1" /><button id="sendButton">Send</button
         ><button id="clearButton">Clear</button>
       </div>
+    </div>
+    <div
+      style="
+        overflow: auto;
+        left: 15vw;
+        top: 24px;
+        position: fixed;
+        background-color: whitesmoke;
+        width: 48px;
+        height: 48px;
+        border-radius: 24px;
+      "
+      id="infoButton"
+    >
+      <img style="opacity: 0.8" width="48px" src="./bin/Images/Info.png" />
+    </div>
+    <div
+      style="
+        overflow: auto;
+        left: 17vw;
+        top: 17vh;
+        width: 50vw;
+        height: 50vh;
+        padding: 24px;
+        position: fixed;
+        background-color: whitesmoke;
+
+        border-radius: 24px;
+        visibility: hidden;
+      "
+      id="info"
+    >
+      <h1>CGSG LS4 3d map travelling system</h1>
+      <p>???</p>
     </div>
     <canvas id="glCanvas" width="3000" height="3000"> </canvas>
   </body>

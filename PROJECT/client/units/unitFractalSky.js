@@ -153,7 +153,9 @@ async function init() {
   );
 
   gl.bindVertexArray(null); /* aaa */
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 }
 export function unitFractalSkyAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "Fractal sky");
 }

@@ -66,7 +66,7 @@ async function init() {
 }
 
 export function unitMrkAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "Marker system");
 }
 
 export function markerDraw(

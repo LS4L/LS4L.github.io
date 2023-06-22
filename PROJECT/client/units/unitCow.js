@@ -56,5 +56,5 @@ async function init() {
   await primitive.create();
 }
 export function unitCowAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "cows");
 }

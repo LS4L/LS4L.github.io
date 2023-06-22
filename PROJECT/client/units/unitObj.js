@@ -6,5 +6,5 @@ function render() {
 }
 async function init() {}
 export function unitObjAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "Obj");
 }

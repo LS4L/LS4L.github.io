@@ -31,5 +31,5 @@ async function init() {
   });
 }
 export function unitDodeAdd() {
-  unitAdd(init, render);
+  unitAdd(init, render, "Dodecahedron");
 }
