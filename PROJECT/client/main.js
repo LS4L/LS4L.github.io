@@ -10,7 +10,7 @@ const socket = io();
 
 export let gl;
 let canvas;
-let coords;
+
 export let users = [];
 let messagesHTML;
 
@@ -79,8 +79,6 @@ window.addEventListener("load", () => {
 
   canvas = document.getElementById("glCanvas");
   gl = canvas.getContext("webgl2");
-
-  coords = document.getElementById("coords");
 
   initGL();
   window.onmousemove = controls.handleMouseMove;
@@ -159,6 +157,8 @@ const draw = () => {
     cam.frameH
     //  Math.max(gl.canvas.width, gl.canvas.height)
   );
+  units.render();
+
   ControlCamera();
 
   cam.setSize(canvas.width, canvas.height);
@@ -166,40 +166,8 @@ const draw = () => {
   //cam.frameW = canvas.width;
   cam.camSet(cam.loc, cam.at, cam.up, cam.pos, cam.userLoc);
 
-  coords.innerHTML =
-    "LocX: " +
-    cam.loc.x.toString().slice(0, 5) +
-    " LocY: " +
-    cam.loc.y.toString().slice(0, 5) +
-    " LocZ: " +
-    cam.loc.z.toString().slice(0, 5) +
-    "<br />" +
-    " Dir X: " +
-    cam.dir.x.toString().slice(0, 5) +
-    " Dir Y: " +
-    cam.dir.y.toString().slice(0, 5) +
-    " Dir Z: " +
-    cam.dir.z.toString().slice(0, 5) +
-    "<br />" +
-    " Up X: " +
-    cam.up.x.toString().slice(0, 5) +
-    " Up Y: " +
-    cam.up.y.toString().slice(0, 5) +
-    " Up Z: " +
-    cam.up.z.toString().slice(0, 5) +
-    "<br />" +
-    " At X: " +
-    cam.at.x.toString().slice(0, 5) +
-    " At Y: " +
-    cam.at.y.toString().slice(0, 5) +
-    " At Z: " +
-    cam.at.z.toString().slice(0, 5) +
-    "<br />";
-
-  units.render();
-
-  mouse.dx = mouse.dy = mouse.dz = 0; //костыль because idk how to see end of mouse move
   socket.emit("reloadRequest", cam);
+  mouse.dx = mouse.dy = mouse.dz = 0; //костыль because idk how to see end of mouse move
   window.requestAnimationFrame(draw);
 };
 
@@ -218,5 +186,6 @@ export async function initGL() {
 
   await shaderAdd("default");
   await units.init();
+  document.getElementById("loading").style.visibility = "hidden";
   draw();
 }

@@ -1,7 +1,7 @@
 import { vec3, matr4 } from "./mth.js";
 import { camera } from "./camera.js";
 export let isPause = false;
-export let isWalking = true; // = false;
+
 export let keys = [];
 export let mouse = {
   x: 0,
@@ -103,7 +103,7 @@ export function floatingCamera() {
   /* Mouse x */
   cam.at = cam.at.sub(cam.loc);
   cam.at = cam.at.mulMatr(
-    myMatr4.rotate(mouse.isRDown * angleSpeed * mouse.dx, cam.up)
+    myMatr4.rotateY(mouse.isRDown * angleSpeed * mouse.dx)
   );
   cam.at = cam.at.add(cam.loc);
 
@@ -207,8 +207,8 @@ let myMatr4 = new matr4();
 cam.speed = 0;
 cam.userDir = new vec3(1, 0, 0);
 cam.pos = new vec3(-1, 1, 0);
-let acceleration = 0.2;
-let deceleration = 1.2;
+let acceleration = 0.01;
+let deceleration = 1.01;
 let rotAngle = 0;
 let maxRotAngle = 45;
 let angleAcceleration = 0.2;
@@ -254,8 +254,8 @@ function bike() {
 }
 
 export function ControlCamera() {
-  let isBike = true;
-  if (!isWalking) floatingCamera();
-  else if (!isBike) walking();
+  if (cam.mode == 0) floatingCamera();
+  else if (cam.mode == 1) walking();
   else bike();
+  cam.mode = 0;
 }

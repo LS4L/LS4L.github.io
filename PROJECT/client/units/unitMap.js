@@ -4,7 +4,7 @@ import { cam } from "../utils/controls.js";
 import { matr4, vec3, vec4 } from "../utils/mth.js";
 import { shaderAdd, useShader } from "../rnd/shaders.js";
 
-let zoom = 13;
+let zoom = 11;
 
 let size = 20;
 
@@ -68,33 +68,41 @@ const startLat = 59.9342802;
 const startTileX = lon2tile(startLon, zoom);
 const startTileY = lat2tile(startLat, zoom);
 async function loadPlaceCategory(places, category, x, y, zoom = zoom, amount) {
-  let lon1 = tile2lon(x - 0.5, zoom);
-  let lat1 = tile2lat(y - 0.5, zoom);
-  let lon2 = tile2lon(x + 0.5, zoom);
-  let lat2 = tile2lat(y + 0.5, zoom);
+  let drawTiles = true; //false;
+  //drawTiles = false;
+  if (drawTiles) {
+    let lon1 = tile2lon(x - 5, zoom);
+    let lat1 = tile2lat(y - 5, zoom);
+    let lon2 = tile2lon(x + 5, zoom);
+    let lat2 = tile2lat(y + 5, zoom);
+    let apiKey = `49a02e9955fe4bd38881e3ec2c56f795`;
+    //apiKey = `ca21185235644d0f821be4dfa3c2d6f3`;
+    apiKey = `12b046bb99314b748355834551cd58d0`;
+    let placesUrl = `https://api.geoapify.com/v2/places?categories=${category}&filter=rect%3A${lon1}%2C${lat1}%2C${lon2}%2C${lat2}&limit=${amount}&apiKey=`;
+    placesUrl = `https://api.geoapify.com/v2/places?categories=${category}&filter=rect%3A${lon1}%2C${lat1}%2C${lon2}%2C${lat2}&limit=${amount}&apiKey=${apiKey}`;
+    //12b046bb99314b748355834551cd58d0
+    //49a02e9955fe4bd38881e3ec2c56f795
+    try {
+      let res = await fetch(placesUrl, {
+        method: "GET",
+      });
+      let result = await res.json();
 
-  let placesUrl = `https://api.geoapify.com/v2/places?categories=${category}&filter=rect%3A${lon1}%2C${lat1}%2C${lon2}%2C${lat2}&limit=${amount}&apiKey=ca21185235644d0f821be4dfa3c2d6f3`;
-
-  try {
-    let res = await fetch(placesUrl, {
-      method: "GET",
-    });
-    let result = await res.json();
-
-    places.push(
-      ...result.features
-        .map((feature) => {
-          return {
-            name: feature.properties.name,
-            x: lon2place(feature.properties.lon, zoom) - startTileX,
-            y: lat2place(feature.properties.lat, zoom) - startTileY,
-          };
-        })
-        .filter((it) => it.name)
-    );
-    return true;
-  } catch (error) {
-    return false;
+      places.push(
+        ...result.features
+          .map((feature) => {
+            return {
+              name: feature.properties.name,
+              x: lon2place(feature.properties.lon, zoom) - startTileX,
+              y: lat2place(feature.properties.lat, zoom) - startTileY,
+            };
+          })
+          .filter((it) => it.name)
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
 
@@ -117,11 +125,12 @@ class tile {
 
     let url = `https://api.mapbox.com/v4/${tileset_id}/${zoom}/${x}/${y}.${format}?access_token=${access_token}`;
 
-    loadPlaceCategory(this.places, "populated_place.city", x, y, zoom, 10);
-    loadPlaceCategory(this.places, "populated_place.county", x, y, zoom, 10);
-    loadPlaceCategory(this.places, "natural.mountain", x, y, zoom, 10);
-    loadPlaceCategory(this.places, "natural.water", x, y, zoom, 10);
-
+    if (x % 5 == 0 && y % 5 == 0) {
+      loadPlaceCategory(this.places, "populated_place.city", x, y, zoom, 10);
+      loadPlaceCategory(this.places, "populated_place.county", x, y, zoom, 10);
+      loadPlaceCategory(this.places, "natural.mountain", x, y, zoom, 10);
+      loadPlaceCategory(this.places, "natural.water", x, y, zoom, 10);
+    }
     /* fetches for a location */
     try {
       let response = await fetch(url);
@@ -342,42 +351,40 @@ function render() {
     gl.uniform1i(texLoc, texUnit);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    let drawTiles = false;
-    if (drawTiles)
-      for (let j = 0; j < tiles[i].places.length; j++) {
-        let clipspace = new vec3(
-          tiles[i].places[j].x * size,
-          0,
-          tiles[i].places[j].y * size
-        );
+    for (let j = 0; j < tiles[i].places.length; j++) {
+      let clipspace = new vec3(
+        tiles[i].places[j].x * size,
+        0,
+        tiles[i].places[j].y * size
+      );
 
-        if (
-          cam.userDir.angle(clipspace.sub(cam.loc)) > 1.57 ||
-          cam.userDir.angle(clipspace.sub(cam.loc)) < -1.57
-        )
-          continue;
+      if (
+        cam.dir.angle(clipspace.sub(cam.loc)) > 1.57 ||
+        cam.dir.angle(clipspace.sub(cam.loc)) < -1.57
+      )
+        continue;
 
-        // vec3 / vec4 difference
-        clipspace = clipspace.mulMatr(cam.matrView).mulMatr(cam.matrProj);
+      // vec3 / vec4 difference
+      clipspace = clipspace.mulMatr(cam.matrView).mulMatr(cam.matrProj);
 
-        let pixelX = (clipspace.x * 0.5 + 0.5) * gl.canvas.width;
-        let pixelY = (clipspace.y * -0.5 + 0.5) * gl.canvas.height;
+      let pixelX = (clipspace.x * 0.5 + 0.5) * gl.canvas.width;
+      let pixelY = (clipspace.y * -0.5 + 0.5) * gl.canvas.height;
 
-        let placeTag = document.createElement("span");
-        const nameTag = document.createTextNode(tiles[i].places[j].name);
-        placeTag.appendChild(nameTag);
+      let placeTag = document.createElement("span");
+      const nameTag = document.createTextNode(tiles[i].places[j].name);
+      placeTag.appendChild(nameTag);
 
-        placeTag.className = "place";
-        placeTag.style.left = Math.floor(pixelX) + "px";
-        placeTag.style.top = Math.floor(pixelY) + "px";
-        placeTag.style.position = "absolute";
-        placeTag.style.color = "red";
-        placeTag.style.fontFamily = "impact";
-        placeTag.style.backgroundColor = "black";
-        placeTag.style.borderRadius = "10px";
-        placeTag.style.paddingRight = placeTag.style.paddingLeft = "3px";
-        placesHTML.appendChild(placeTag);
-      }
+      placeTag.className = "place";
+      placeTag.style.left = Math.floor(pixelX) + "px";
+      placeTag.style.top = Math.floor(pixelY) + "px";
+      placeTag.style.position = "absolute";
+      placeTag.style.color = "red";
+      placeTag.style.fontFamily = "impact";
+      placeTag.style.backgroundColor = "black";
+      placeTag.style.borderRadius = "10px";
+      placeTag.style.paddingRight = placeTag.style.paddingLeft = "3px";
+      placesHTML.appendChild(placeTag);
+    }
   }
 }
 

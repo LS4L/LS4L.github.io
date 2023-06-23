@@ -12,7 +12,7 @@ export class shader {
 
 export async function shaderAdd(fileName = null) {
   let vs, fs, res;
-  if (fileName == null) return shaders[0];
+  if (fileName == null || fileName == 0) return shaders[0];
   function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -53,7 +53,14 @@ export async function shaderAdd(fileName = null) {
   return res;
 }
 
-export function useShader(shader, vertices, indices = null, normals = null) {
+export function useShader(
+  shader,
+  vertices,
+  indices = null,
+  normals = null,
+  texCoords = null,
+  colors = null
+) {
   let posLoc = gl.getAttribLocation(shader.shaderProgram, "in_pos");
   const positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -73,6 +80,25 @@ export function useShader(shader, vertices, indices = null, normals = null) {
   gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
   gl.enableVertexAttribArray(normalLoc);
   gl.vertexAttribPointer(normalLoc, 3, gl.FLOAT, false, 0, 0);
+
+  if (texCoords != null) {
+    const texCoordLoc = gl.getAttribLocation(shader.shaderProgram, "texCoord");
+    const texCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(texCoordLoc);
+    gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 0, 0);
+  }
+
+  if (colors != null) {
+    const colorLoc = gl.getAttribLocation(shader.shaderProgram, "color");
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(colorLoc);
+    gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 0, 0);
+  }
+
   if (indices != null) {
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);

@@ -8,11 +8,18 @@ import { markerDraw } from "../utils/markers.js";
 const flag = new cloth();
 function handleHardConstraints(someCloth) {
   someCloth.p[0] = cam.userLoc.add(new vec3(0, 1, 0)).sub(cam.userDir.mul(0.5));
+  /*
+  someCloth.p[1] = cam.userLoc
+    .add(new vec3(0, 1.1, 0))
+    .sub(cam.userDir.mul(0.5));
+  someCloth.p[8] = cam.userLoc.add(new vec3(0, 1.7, 0)).sub(cam.userDir);
+  */
   someCloth.p[9] = cam.userLoc.add(new vec3(0, 1.8, 0)).sub(cam.userDir);
 }
+
 function render() {
   if (!keys["Space"]) flag.update(10);
-  flag.wind = new vec3(0.00006 * Math.sin(Date.now()), 0, 0);
+  flag.wind = new vec3(0.0003 * Math.sin(Date.now() / 10), 0, 0);
   flag.draw();
   markerDraw(
     cam.userLoc,
@@ -22,7 +29,7 @@ function render() {
 }
 
 async function init() {
-  flag.createDefault(10, 10, 0.00001, 0.08, 0.98, 0.9);
+  flag.createDefault(10, 10, 0.0001, 0.08, 0.98, 1);
   flag.handleHardConstraints = handleHardConstraints;
 }
 

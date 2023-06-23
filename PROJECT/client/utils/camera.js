@@ -12,6 +12,7 @@ export class camera {
     this.matrVP = new matr4();
     this.id = Math.random().toString();
     this.setDef();
+    this.mode = 2;
   }
   camSet(loc, at, up, pos, userLoc) {
     let myMatr4 = new matr4();

@@ -1,20 +1,23 @@
 import { unitAdd } from "./units.js";
-import { primLoadObj } from "../rnd/prims.js";
+import { primsLoad } from "../rnd/prims.js";
 import { matr4, vec3 } from "../utils/mth.js";
 import { cam } from "../utils/controls.js";
 import { users, gl } from "../main.js";
 
-let primitive;
+let primitives;
 let myMatr4 = new matr4();
 let success = 1;
 let side = new vec3(0, 0, -1);
 let placesHTML;
+
 function render() {
+  cam.mode = 2;
+
   if (success) {
-    primitive.draw(
+    primitives.draw(
       myMatr4
         .rotateY((side.angle(cam.userDir) * 180) / Math.PI)
-        .mul(myMatr4.translate(new vec3(cam.userLoc.x, 0, cam.userLoc.z)))
+        .mul(myMatr4.translate(new vec3(cam.userLoc.x, 0.5, cam.userLoc.z)))
     );
   }
 
@@ -23,16 +26,15 @@ function render() {
       let world = myMatr4
         .rotateY(
           (side.angle(
-            new vec3(userCam.right.x, userCam.right.y, userCam.right.z)
+            new vec3(userCam.userDir.x, userCam.userDir.y, userCam.userDir.z)
           ) *
             180) /
             Math.PI
         )
-        .mul(myMatr4.scale(new vec3(1, 1, 1)))
         .mul(
-          myMatr4.translate(new vec3(userCam.userLoc.x, 0, userCam.userLoc.z))
+          myMatr4.translate(new vec3(userCam.userLoc.x, 0.5, userCam.userLoc.z))
         );
-      primitive.draw(world);
+      primitives.draw(world);
 
       let clipspace = new vec3(
         userCam.userLoc.x,
@@ -41,8 +43,8 @@ function render() {
       );
 
       if (
-        cam.userDir.angle(clipspace.sub(cam.loc)) > 1.57 ||
-        cam.userDir.angle(clipspace.sub(cam.loc)) < -1.57
+        cam.dir.angle(clipspace.sub(cam.loc)) > 1.57 ||
+        cam.dir.angle(clipspace.sub(cam.loc)) < -1.57
       )
         continue;
 
@@ -70,16 +72,16 @@ function render() {
   }
 }
 async function init() {
-  let obj;
   placesHTML = document.getElementById("places");
 
-  primitive = await primLoadObj(obj);
-  primitive.catch(() => (success = 0));
-
-  primitive.mtl.shaderName = "withLightSmooth";
-  await primitive.create();
+  primitives = await primsLoad("bin/models/bike.g3dm");
+  primitives.prims.forEach((primitive) => {
+    primitive.mtl.shaderName = "bike";
+    //  primitive.create();
+  });
+  await primitives.create();
 }
 
 export function unitBikeAdd() {
-  unitAdd(init, render, "user");
+  unitAdd(init, render, "Bike");
 }

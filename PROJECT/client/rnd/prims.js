@@ -78,7 +78,9 @@ export async function primLoadObj(file) {
     normals = calculateNormals(vertices, indices);
   }
   let realV = [];
-  vertices.forEach((it, index) => realV.push(new vertex(it, normals[index])));
+  vertices.forEach((it, index) =>
+    realV.push(new vertex(it, new vec2(), normals[index]))
+  );
   let res = new prim(realV, indices);
   res.mtl = new mtl();
   res.mtl.shaderName = "withLight";
@@ -119,10 +121,10 @@ export function loadImage(src) {
 }
 
 export class vertex {
-  constructor(p = new vec3(), n = new vec3(), t = new vec2(), c = new vec4()) {
+  constructor(p = new vec3(), t = new vec2(), n = new vec3(), c = new vec4()) {
     this.p = p;
-    this.n = n;
     this.t = t;
+    this.n = n;
     this.c = c;
   }
 }
@@ -144,7 +146,7 @@ export class prim {
     this.type = type;
   }
 
-  draw(world) {
+  draw(world, ...shdAddons) {
     gl.useProgram(this.shader.shaderProgram);
     let timeLoc = gl.getUniformLocation(this.shader.shaderProgram, "time");
     const projectionLoc = gl.getUniformLocation(
@@ -176,6 +178,15 @@ export class prim {
       false,
       new Float32Array(cam.matrView.a().join().split(","))
     );
+    for (let i = 0; i < 8; i++) {
+      const shdAddonLoc = gl.getUniformLocation(
+        this.shader.shaderProgram,
+        "shdAddon" + i
+      );
+      if (shdAddonLoc != -1 && shdAddonLoc != null) {
+        gl.uniform1i(shdAddonLoc, shdAddons[i]);
+      }
+    }
 
     gl.uniform1f(timeLoc, Date.now());
     gl.uniform3f(lightDirLoc, 1, 2, 3);
@@ -196,6 +207,23 @@ export class prim {
     gl.uniform3f(kdLoc, this.mtl.kd.x, this.mtl.kd.y, this.mtl.kd.z);
     gl.uniform3f(ksLoc, this.mtl.ks.x, this.mtl.ks.y, this.mtl.ks.z);
     gl.uniform1f(phLoc, this.mtl.ph);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
+    this.mtl.tex.forEach((texture, index) => {
+      if (texture && texture != null && texture != -1) {
+        // Tell WebGL we want to affect texture unit 0
+        gl.activeTexture(gl.TEXTURE0 + index);
+
+        // Bind the texture to texture unit 0
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        let loc = gl.getUniformLocation(
+          this.shader.shaderProgram,
+          "tex" + index
+        );
+
+        gl.uniform1i(loc, index);
+      }
+    });
 
     if (this.iBuf != null) {
       // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.iBuf);
@@ -217,7 +245,11 @@ export class prim {
       this.shader,
       new Float32Array(this.vBuf.map((el) => [el.p.x, el.p.y, el.p.z]).flat()),
       new Uint16Array(this.iBuf),
-      new Float32Array(this.vBuf.map((el) => [el.n.x, el.n.y, el.n.z]).flat())
+      new Float32Array(this.vBuf.map((el) => [el.n.x, el.n.y, el.n.z]).flat()),
+      new Float32Array(this.vBuf.map((el) => [el.t.x, el.t.y]).flat()),
+      new Float32Array(
+        this.vBuf.map((el) => [el.c.x, el.c.y, el.c.z, el.c.w]).flat()
+      )
     );
     gl.bindVertexArray(null);
   }
@@ -227,37 +259,41 @@ export class prims {
   constructor(numOfPrims) {
     this.numOfPrims = numOfPrims;
     this.trans = new matr4();
-    this.minBB = this.maxBB = vec3(0);
+    this.minBB = this.maxBB = new vec3(0);
     this.prims = [];
   }
 
-  draw(world) {
-    const m = this.trans.mulMatr(world);
+  draw(world, ...args) {
+    const m = this.trans.mul(world);
 
     for (let i = 0; i < this.numOfPrims; i++) {
-      this.prims[i].draw(m, this.numOfPrims, i);
+      this.prims[i].draw(m, this.numOfPrims, i, ...args);
     }
+  }
+  async create() {
+    for (let pr of this.prims) await pr.create();
   }
 }
 
-function addTexture() {
-  var texture = gl.createTexture();
+function addTexture(bytes, width, height) {
+  let texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(
     gl.TEXTURE_2D,
     0,
     gl.RGBA,
-    1,
-    1,
+    width,
+    height,
     0,
     gl.RGBA,
     gl.UNSIGNED_BYTE,
-    data
+    bytes
   );
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   return texture;
 }
+
 export async function primsLoad(fileName) {
   const response = await fetch(fileName);
   let dataBuf = await response.arrayBuffer();
@@ -287,11 +323,20 @@ export async function primsLoad(fileName) {
       dataBuf.slice(ptr, (ptr += 4 * (3 + 2 + 3 + 4) * numOfV))
     );
     let ind = new Uint32Array(dataBuf.slice(ptr, (ptr += 4 * numOfI)));
+    let realV = [];
+    for (let i = 0; i < v.length; i += 12)
+      realV.push(
+        new vertex(
+          new vec3(v[i], v[i + 1], v[i + 2]),
+          new vec2(v[i + 3], v[i + 4]),
+          new vec3(v[i + 5], v[i + 6], v[i + 7]),
+          new vec4(v[i + 8], v[i + 9], v[i + 10], v[i + 11])
+        )
+      );
 
-    prs.prims.push(new prim(v, ind));
-    prs.prims[i].mtl = materials[mtlNo];
-    prs.prims[i].create();
-    if (i === 0)
+    prs.prims.push(new prim(realV, ind));
+    prs.prims[i].mtlNo = mtlNo;
+    /* if (i === 0)
       (prs.minBB = prs.prims[0].minBB), (prs.maxBB = prs.prims[0].maxBB);
     else {
       if (prs.minBB.x > prs.prims[i].minBB.x)
@@ -309,6 +354,7 @@ export async function primsLoad(fileName) {
       if (prs.maxBB.z < prs.prims[i].maxBB.z)
         prs.maxBB.z = prs.prims[i].maxBB.z;
     }
+  */
   }
 
   for (let m = 0; m < numOfMaterials; m++) {
@@ -327,9 +373,12 @@ export async function primsLoad(fileName) {
       new vec3(s[6], s[7], s[8]),
       s[9],
       s[10],
-      0
+      "tex"
     );
-    for (let i = 0; i < 8; i++) mtl.tex[i] = textures[txtarr[i]];
+    material.texNo = [];
+    for (let i = 0; i < 8; i++) {
+      material.texNo[i] = txtarr[i];
+    }
     materials[m] = material;
     ptr += 300 + 4;
   }
@@ -351,8 +400,29 @@ export async function primsLoad(fileName) {
       bits[i + 2] = t;
     }
 
-    textures[t] = addTexture(texName, bits, w, h);
+    textures[t] = addTexture(bits, w, h);
   }
 
+  for (let material of materials) {
+    for (let i = 0; i < 8; i++) {
+      material.tex[i] =
+        material.texNo[i] == -1 ? -1 : textures[material.texNo[i]];
+    }
+  }
+
+  for (let pr of prs.prims) {
+    pr.mtl = pr.mtlNo != undefined ? materials[pr.mtlNo] : new mtl();
+  }
+
+  /*for (let i = 0; i < prs.prims.length; i++)
+    for (let j = 0; j < prs.prims[i].mtl.tex.length; j++)
+      if (
+        prs.prims[i].mtl.tex[j] != undefined /* Why is this needed???????*/ /* &&
+        prs.prims[i].mtl.tex[j].texNo != -1
+      ) {
+        prs.prim  s[i].mtl.tex[j] = textures[prs.prims[i].mtl.tex[j].texNo];
+      }*/
+
+  await prs.create();
   return prs;
 }

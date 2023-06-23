@@ -10,6 +10,7 @@ import { unitPlaneAdd } from "./unitPlane.js";
 import { unitDodeAdd } from "./unitDodecahedron.js";
 import { unitCowAdd } from "./unitCow.js";
 import { unitBikeAdd } from "./unitBike.js";
+import { unitUserAdd } from "./unitUser.js";
 import { unitMapAdd } from "./unitMap.js";
 import { unitFractalSkyAdd } from "./unitFractalSky.js";
 import { unitInterfaceAdd } from "./unitInterface.js";
@@ -27,10 +28,9 @@ let units = [];
 
 export async function init() {
   unitFractalSkyAdd();
-  unitMrkAdd();
+  unitClothAdd();
   unitInterfaceAdd();
   unitObjAdd();
-
   unitPlaneAdd();
   unitIcoAdd();
   unitCubeAdd();
@@ -39,12 +39,11 @@ export async function init() {
   unitDodeAdd();
   unitDbgAdd();
   unitCowAdd();
-
   unitMarkersAdd();
   unitMapAdd();
+  unitUserAdd();
   unitBikeAdd();
-
-  unitClothAdd();
+  unitMrkAdd();
 
   for (let i = 0; i < units.length; i++) {
     await units[i].init();
@@ -63,6 +62,22 @@ export async function init() {
   units.forEach((unit, index) => {
     switch (unit.name) {
       case "Plane":
+        break;
+      case "user":
+        break;
+      case "cows":
+        break;
+      case "markers":
+        break;
+      case "Icosahedron":
+        break;
+      case "Tetrahedron":
+        break;
+      case "cube":
+        break;
+      case "Debug":
+        break;
+      case "Octahedron":
         break;
       default:
         document.getElementById("unit" + index).checked = true;

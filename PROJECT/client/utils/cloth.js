@@ -103,8 +103,8 @@ export class cloth {
       const newPos = this.p[i]
         .add(this.p[i].sub(this.oldP[i]).mul(this.friction))
         .add(this.forces[i].mul(deltaTime));
-      this.p[i] = newPos;
-      this.oldP[i] = oldPos;
+      this.p[i] = newPos.copy();
+      this.oldP[i] = oldPos.copy();
     }
   }
 
@@ -138,10 +138,10 @@ export class cloth {
 
   update(speed = 1) {
     if (!isPause) {
+      this.accumulateForces();
+      this.verletStep();
       for (let i = 0; i < speed; i++) {
         this.satisfyConstraints();
-        this.accumulateForces();
-        this.verletStep();
       }
     }
   }
