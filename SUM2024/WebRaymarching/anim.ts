@@ -128,9 +128,14 @@ export async function compileShader(worldMap: string = generateWorldMap() as str
     }
     buffers = initBuffers()
 }
+let canvas: HTMLCanvasElement
+
 export async function init() {
-    const canvas = document.querySelector('#glcanvas') as HTMLCanvasElement
-    if (!canvas) return
+    canvas = document.querySelector('#glcanvas') as HTMLCanvasElement
+    if (!canvas) {
+        alert('No canvas element!!!')
+        return
+    }
 
     gl = canvas.getContext('webgl2') as WebGL2RenderingContext
 
@@ -155,8 +160,8 @@ export function render() {
     gl.bindBuffer(gl.UNIFORM_BUFFER, buffers.camera)
     gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array([cam.loc.arr4(), cam.dir.arr4(), cam.right.arr4(), cam.up.arr4(), cam.matrView.m.flat()].flat()))
 
-    gl.uniform1i(programInfo.uniformLocations.frameW, window.innerWidth)
-    gl.uniform1i(programInfo.uniformLocations.frameH, window.innerHeight)
+    gl.uniform1i(programInfo.uniformLocations.frameW, canvas.width)
+    gl.uniform1i(programInfo.uniformLocations.frameH, canvas.height)
     gl.uniform1i(programInfo.uniformLocations.time, Date.now()) // not sure
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)

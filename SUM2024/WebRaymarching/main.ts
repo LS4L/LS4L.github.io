@@ -86,6 +86,7 @@ export async function main() {
     const reloadButton = document.getElementById('reload') as HTMLButtonElement
     if (reloadButton) reloadButton.onclick = reload
 
+    resize()
     await init()
     initShapes()
 
@@ -94,14 +95,17 @@ export async function main() {
 
 function resize() {
     const canvas = document.querySelector('#glcanvas') as HTMLCanvasElement
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-
-    main() // bad idea.
+    if (window.innerWidth < window.innerHeight) {
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight / 2
+    } else {
+        canvas.width = window.innerWidth / 2
+        canvas.height = window.innerHeight
+    }
 }
 
 window.addEventListener('load', main)
-//window.addEventListener('resize', resize)
+window.addEventListener('resize', resize)
 
 window.onbeforeunload = saveScene
 window.onmousemove = controls.handleMouseMove
